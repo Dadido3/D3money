@@ -1,4 +1,4 @@
-module github.com/Dadido3/D3money
+module github.com/Dadido3/d3money
 
 go 1.16
 

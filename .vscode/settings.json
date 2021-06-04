@@ -2,5 +2,8 @@
     "licenser.author": "David Vogel",
     "licenser.license": "MIT",
     "licenser.disableAutoHeaderInsertion": true,
-    "licenser.projectName": "D3money"
+    "licenser.projectName": "D3money",
+    "cSpell.words": [
+        "unmarshalling"
+    ]
 }
