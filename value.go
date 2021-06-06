@@ -11,12 +11,21 @@ import (
 type Value struct {
 	value decimal.Decimal
 
+	// Currency can be nil.
 	currency Currency
 
-	// List of possible currencies to chose from.
+	// List(s) of possible currencies to chose from.
 	// This is used when unmarshalling from some data structure into a d3money.Value object.
 	// Note: I don't want to use a global list of currencies for unmarshalling, as it may cause problems and is less customizable.
-	currencies []Currency
+	currencyStandards []map[string]Currency
+}
+
+// NewWithCurrencies returns a value object with the given currencyStandards (Maps of available currencies) set.
+// This should be used before unmarshalling, otherwise currencies can't be matched by their codes.
+func NewWithCurrencies(currencyStandards ...map[string]Currency) Value {
+	return Value{
+		currencyStandards: currencyStandards,
+	}
 }
 
 // NewFromString returns a value object from the given string.
@@ -69,7 +78,7 @@ func NewFromStringWithCurrency(str string, cur Currency) (Value, error) {
 
 // NewFromStringWithCurrencies returns a value object from the given string.
 // The field cur can be used to override the currency.
-// The field currencies is used for matching currencies.
+// The field currencies is used to define currencies for matching.
 // This will not use any locale specific formatting, and is not suited for input from humans without any preprocessing.
 //
 // Examples:
@@ -142,7 +151,7 @@ func RequireFromStringWithCurrency(str string, cur Currency) Value {
 
 // RequireFromStringWithCurrencies returns a value object from the given string.
 // The field cur can be used to override the currency.
-// The field currencies is used for matching currencies.
+// The field currencies is used to define currencies for matching.
 // This will not use any locale specific formatting, and is not suited for input from humans without any preprocessing.
 //
 // In case of an error, this will panic.
@@ -177,20 +186,10 @@ func parse(str string, currencyStandards ...map[string]Currency) (decimal.Decima
 		valStr, curStr = splitted[0], splitted[1]
 
 		// Match currency.
-		found := false
-	matcherBreak:
-		for _, currencyStandard := range currencyStandards {
-			for _, currency := range currencyStandard {
-				if currency != nil {
-					if currency.UniqueCode() == curStr {
-						matchedCurrency, found = currency, true
-						break matcherBreak
-					}
-				}
-			}
-		}
-		if !found {
-			return decimal.Zero, nil, fmt.Errorf("couldn't find or match currency %q", curStr)
+		var err error
+		matchedCurrency, err = MatchCurrencyByUniqueCode(curStr, currencyStandards...)
+		if err != nil {
+			return decimal.Zero, nil, err
 		}
 
 	default:

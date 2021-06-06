@@ -1,5 +1,7 @@
 package d3money
 
+import "fmt"
+
 // Currency defines a currency and its properties.
 type Currency interface {
 	Name() string // Name returns the name of the currency.
@@ -12,4 +14,19 @@ type Currency interface {
 	DecimalPlaces() (int, bool) // DecimalPlaces returns the number of decimal places that represents the "Minor unit". If the resulting bool is false, there is no smallest unit.
 
 	Standard() string // Standard returns an alphanumeric string that identifies the standard the currency is defined in. Examples: "ISO4217"
+}
+
+// MatchCurrencyByUniqueCode finds a currency by its unique code (e.g. "ISO4217-EUR").
+func MatchCurrencyByUniqueCode(uniqueCode string, currencyStandards ...map[string]Currency) (Currency, error) {
+	for _, currencyStandard := range currencyStandards {
+		for _, currency := range currencyStandard {
+			if currency != nil {
+				if currency.UniqueCode() == uniqueCode {
+					return currency, nil
+				}
+			}
+		}
+	}
+
+	return nil, fmt.Errorf("couldn't find or match currency %q", uniqueCode)
 }
