@@ -13,8 +13,11 @@ func (v Value) MarshalJSON() ([]byte, error) {
 		Value    decimal.Decimal
 		Currency string `json:",omitempty"`
 	}{
-		v.value,
-		v.currency.UniqueCode(),
+		Value: v.value,
+	}
+
+	if v.currency != nil {
+		d.Currency = v.currency.UniqueCode()
 	}
 
 	return json.Marshal(d)
