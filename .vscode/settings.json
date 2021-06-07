@@ -4,6 +4,7 @@
     "licenser.disableAutoHeaderInsertion": true,
     "licenser.projectName": "D3money",
     "cSpell.words": [
+        "sqlite",
         "unmarshalling"
     ]
 }

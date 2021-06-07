@@ -19,6 +19,7 @@ type Currency interface {
 // MatchCurrencyByUniqueCode finds a currency by its unique code (e.g. "ISO4217-EUR").
 func MatchCurrencyByUniqueCode(uniqueCode string, currencyStandards ...map[string]Currency) (Currency, error) {
 	for _, currencyStandard := range currencyStandards {
+		// TODO: Use the map, instead of iterating over all currencies
 		for _, currency := range currencyStandard {
 			if currency != nil {
 				if currency.UniqueCode() == uniqueCode {
