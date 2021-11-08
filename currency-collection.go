@@ -8,7 +8,7 @@ import (
 type CurrencyCollection interface {
 	Name() string // Name returns the name of the currency collection.
 
-	Currencies() []Currency                  // Currencies returns the list of currencies that are contained in this collection.
+	All() []Currency                         // All returns the full list of currencies that are contained in this collection.
 	ByUniqueID(uniqueID int32) Currency      // ByUniqueID finds a currency by its unique ID (e.g. 42170978).
 	ByUniqueCode(uniqueCode string) Currency // ByUniqueCode finds a currency by its unique code (e.g. "ISO4217-EUR").
 	ByCode(code string) Currency             // ByCode finds a currency by its code (e.g. "EUR"). This may not yield a result, as the code is not unique across currency standards. Best is to use it only in combination with a collection of a single standard, like ISO4217Currencies.
@@ -59,36 +59,13 @@ func MustNewCurrencyCollection(name string, listsOfCurrencies ...[]Currency) Cur
 	return cc
 }
 
-// CombineCurrencyCollections takes one ore more currency collections, and returns them as one combined collection.
-// TODO: Consider removal of CombineCurrencyCollections
-func CombineCurrencyCollections(name string, listOfCollections ...CurrencyCollection) (CurrencyCollection, error) {
-	var currencies []Currency
-
-	for _, collection := range listOfCollections {
-		currencies = append(currencies, collection.Currencies()...)
-	}
-
-	return NewCurrencyCollection(name, currencies)
-}
-
-// MustCombineCurrencyCollections takes one ore more currency collections, and returns them as one combined collection.
-// It will panic on any error.
-func MustCombineCurrencyCollections(name string, listOfCollections ...CurrencyCollection) CurrencyCollection {
-	cc, err := CombineCurrencyCollections(name, listOfCollections...)
-	if err != nil {
-		panic(fmt.Sprintf("failed to create combined currency collection %q: %v", name, err))
-	}
-
-	return cc
-}
-
 // Name returns the name of the currency collection.
 func (cc *currencyCollectionSet) Name() string {
 	return cc.name
 }
 
-// Currencies returns the list of currencies that are contained in this collection.
-func (cc *currencyCollectionSet) Currencies() []Currency {
+// All returns the full list of currencies that are contained in this collection.
+func (cc *currencyCollectionSet) All() []Currency {
 	return cc.currencies
 }
 
@@ -129,7 +106,7 @@ func (cc *currencyCollectionSet) add(c Currency) error {
 		return fmt.Errorf("currency %q has the same unique ID %d as the already existing currency %q", c, uniqueID, currencyByUniqueID)
 	} else if foundByUniqueCode && currencyByUniqueCode != c {
 		// There is another currency with the same unique Code.
-		return fmt.Errorf("currency %q has the same unique code %q as the already existing currency %q", c, uniqueCode, currencyByUniqueCode)
+		return fmt.Errorf("currency with unique ID %d has the same unique code %q as the already existing currency with unique ID %d", uniqueID, uniqueCode, currencyByUniqueCode.UniqueID())
 	}
 
 	cc.currencies = append(cc.currencies, c)

@@ -24,6 +24,7 @@ type ISO4217Currency struct {
 var _ Currency = (*ISO4217Currency)(nil)
 
 // Name returns the name of the currency.
+// This is the english or native name.
 func (c *ISO4217Currency) Name() string {
 	return c.name
 }
@@ -88,22 +89,17 @@ func (c *ISO4217Currency) ShortSymbol() string {
 
 // DecimalPlaces returns the number of decimal places that represents the "Minor unit".
 // If the resulting number is 0, this currency can't be divided any further.
-// If the resulting bool is false, there is no smallest unit.
-func (c *ISO4217Currency) DecimalPlaces() (int, bool) {
-	if c.decimalPlaces != -1 {
-		return 0, false
+// If the resulting bool is false and/or if the number of decimal places is -1, there is no smallest unit.
+func (c *ISO4217Currency) DecimalPlaces() (decimalPlaces int, hasSmallestUnit bool) {
+	if c.decimalPlaces == -1 {
+		return -1, false
 	}
-	return c.decimalPlaces, false
+	return c.decimalPlaces, true
 }
 
 func (c *ISO4217Currency) String() string {
 	return c.CodePrefix() + c.alphabeticCode
 }
-
-// TODO: Make sure (by test) that the map key is equal to the alphabetic code of the currency
-// TODO: Make sure (by test) that all currencies' unique codes are unique
-// TODO: Make sure (by test) that all currencies' unique IDs are unique
-// TODO: Make sure (by test) that no currency code/symbol contains illegal characters
 
 // iso4217Currencies contains the official and active ISO 4217 currencies as of August 29, 2018.
 //
