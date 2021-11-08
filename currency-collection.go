@@ -8,12 +8,12 @@ import (
 type CurrencyCollection interface {
 	Name() string // Name returns the name of the currency collection.
 
-	Currencies() []Currency                          // Currency returns the list of currencies that are contained in this collection.
-	CurrencyByUniqueID(uniqueID int32) Currency      // CurrencyByUniqueID finds a currency by its unique ID (e.g. 42170978).
-	CurrencyByUniqueCode(uniqueCode string) Currency // CurrencyByUniqueCode finds a currency by its unique code (e.g. "ISO4217-EUR").
-	CurrencyByCode(code string) Currency             // CurrencyByCode finds a currency by its code (e.g. "EUR"). This may not yield a result, as the code is not unique across currency standards. Best is to use it only in combination with a collection of a single standard, like ISO4217Currencies.
+	Currencies() []Currency                  // Currencies returns the list of currencies that are contained in this collection.
+	ByUniqueID(uniqueID int32) Currency      // ByUniqueID finds a currency by its unique ID (e.g. 42170978).
+	ByUniqueCode(uniqueCode string) Currency // ByUniqueCode finds a currency by its unique code (e.g. "ISO4217-EUR").
+	ByCode(code string) Currency             // ByCode finds a currency by its code (e.g. "EUR"). This may not yield a result, as the code is not unique across currency standards. Best is to use it only in combination with a collection of a single standard, like ISO4217Currencies.
 
-	AddCurrencies(c ...Currency) error // AddCurrencies adds one or more currencies to this collection.
+	Add(c ...Currency) error // Add adds one or more currencies to this collection.
 }
 
 // currencyCollectionSet implements CurrencyCollection.
@@ -40,7 +40,7 @@ func NewCurrencyCollection(name string, listsOfCurrencies ...[]Currency) (Curren
 	}
 
 	for _, listOfCurrencies := range listsOfCurrencies {
-		if err := cc.AddCurrencies(listOfCurrencies...); err != nil {
+		if err := cc.Add(listOfCurrencies...); err != nil {
 			return nil, fmt.Errorf("failed to add currency to collection: %w", err)
 		}
 	}
@@ -87,33 +87,33 @@ func (cc *currencyCollectionSet) Name() string {
 	return cc.name
 }
 
-// Currency returns the list of currencies that are contained in this collection.
+// Currencies returns the list of currencies that are contained in this collection.
 func (cc *currencyCollectionSet) Currencies() []Currency {
 	return cc.currencies
 }
 
-// CurrencyByUniqueID finds a currency by its unique ID (e.g. 42170978).
-func (cc *currencyCollectionSet) CurrencyByUniqueID(uniqueID int32) Currency {
+// ByUniqueID finds a currency by its unique ID (e.g. 42170978).
+func (cc *currencyCollectionSet) ByUniqueID(uniqueID int32) Currency {
 	return cc.byUniqueID[uniqueID]
 }
 
-// CurrencyByUniqueCode finds a currency by its unique code (e.g. "ISO4217-EUR").
-func (cc *currencyCollectionSet) CurrencyByUniqueCode(uniqueCode string) Currency {
+// ByUniqueCode finds a currency by its unique code (e.g. "ISO4217-EUR").
+func (cc *currencyCollectionSet) ByUniqueCode(uniqueCode string) Currency {
 	return cc.byUniqueCode[uniqueCode]
 }
 
-// CurrencyByCode finds a currency by its code (e.g. "EUR").
+// ByCode finds a currency by its code (e.g. "EUR").
 // This may not yield a result, as the code is not unique across currency standards.
 // Best is to use it only in combination with a collection of a single standard, like ISO4217Currencies.
-func (cc *currencyCollectionSet) CurrencyByCode(code string) Currency {
+func (cc *currencyCollectionSet) ByCode(code string) Currency {
 	if cc.byCode != nil {
 		return cc.byCode[code]
 	}
 	return nil
 }
 
-// addCurrency adds a currency to a collection.
-func (cc *currencyCollectionSet) addCurrency(c Currency) error {
+// add adds a currency to this collection.
+func (cc *currencyCollectionSet) add(c Currency) error {
 	uniqueID, uniqueCode, Code := c.UniqueID(), c.UniqueCode(), c.Code()
 
 	// Check if the currency already exists.
@@ -148,10 +148,10 @@ func (cc *currencyCollectionSet) addCurrency(c Currency) error {
 	return nil
 }
 
-// AddCurrencies adds a currency to a collection.
-func (cc *currencyCollectionSet) AddCurrencies(currencies ...Currency) error {
+// Add adds one or more currencies to this collection.
+func (cc *currencyCollectionSet) Add(currencies ...Currency) error {
 	for _, c := range currencies {
-		if err := cc.addCurrency(c); err != nil {
+		if err := cc.add(c); err != nil {
 			return err
 		}
 	}

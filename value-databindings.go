@@ -40,7 +40,7 @@ func (v *Value) UnmarshalJSON(data []byte) error {
 
 	var cur Currency
 	if d.Currency != "" {
-		if cur = Currencies.CurrencyByUniqueCode(d.Currency); cur == nil {
+		if cur = Currencies.ByUniqueCode(d.Currency); cur == nil {
 			return fmt.Errorf("can't find unique currency code %q", d.Currency)
 		}
 	}
