@@ -4,9 +4,10 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"fmt"
-	"strings"
 
 	"github.com/shopspring/decimal"
+	"gorm.io/gorm"
+	"gorm.io/gorm/schema"
 )
 
 // MarshalJSON returns the marshaled representation of the object.
@@ -39,10 +40,8 @@ func (v *Value) UnmarshalJSON(data []byte) error {
 
 	var cur Currency
 	if d.Currency != "" {
-		var err error
-		cur, err = MatchCurrencyByUniqueCode(d.Currency, v.currencyStandards...)
-		if err != nil {
-			return fmt.Errorf("can't get currency: %w", err)
+		if cur = Currencies.CurrencyByUniqueCode(d.Currency); cur == nil {
+			return fmt.Errorf("can't find unique currency code %q", d.Currency)
 		}
 	}
 
@@ -54,8 +53,8 @@ func (v *Value) UnmarshalJSON(data []byte) error {
 // Value implements the valuer interface of databases.
 func (v Value) Value() (driver.Value, error) {
 	if v.currency != nil {
-		// Currency defined, output "UniqueCode Value" pair. Use a normal space for database storage.
-		return fmt.Sprintf("%s %s", v.currency.UniqueCode(), v.Decimal()), nil
+		// Currency defined, output "Value UniqueCode" pair. Use a normal space for database storage.
+		return fmt.Sprintf("%s %s", v.Decimal(), v.currency.UniqueCode()), nil
 	}
 
 	// No currency defined, only output the value.
@@ -69,33 +68,27 @@ func (v *Value) Scan(value interface{}) error {
 		return fmt.Errorf("incompatible type %T, expected %T", value, str)
 	}
 
-	splitted := strings.Split(str, " ") // "UniqueCode Value". Use a normal space for database storage.
-	switch len(splitted) {
-	case 1:
-		// String (probably) consists only of the value.
-		var err error
-		v.value, err = decimal.NewFromString(splitted[0])
-		if err != nil {
-			return fmt.Errorf("malformed monetary value: %w", err)
-		}
-		v.currency = nil
-
-	case 2:
-		// String (probably) consists of a value + unique code pair.
-		var err error
-		v.value, err = decimal.NewFromString(splitted[1])
-		if err != nil {
-			return fmt.Errorf("malformed monetary value: %w", err)
-		}
-		// Match currency.
-		v.currency, err = MatchCurrencyByUniqueCode(splitted[0], v.currencyStandards...)
-		if err != nil {
-			return fmt.Errorf("can't get currency: %w", err)
-		}
-
-	default:
-		return fmt.Errorf("malformed string %q: invalid amount of spaces", str)
+	val, newCur, err := parse(str, Currencies, nil)
+	if err != nil {
+		return fmt.Errorf("failed to parse string %q: %w", str, err)
 	}
 
+	v.value, v.currency = val, newCur
+
 	return nil
+}
+
+// GormDBDataType returns the datatype that a database should use for the field.
+func (v Value) GormDBDataType(db *gorm.DB, field *schema.Field) string {
+	// Use field.Tag, field.TagSettings gets field's tags.
+	// Checkout https://github.com/go-gorm/gorm/blob/master/schema/field.go for all options.
+
+	// Return database type based on driver name.
+	switch db.Dialector.Name() {
+	case "mysql", "sqlite":
+		return "VARCHAR(255)"
+	case "postgres":
+		return "VARCHAR"
+	}
+	return ""
 }

@@ -9,10 +9,7 @@ import (
 )
 
 func TestJSONMarshalling(t *testing.T) {
-	val, err := NewFromStringWithCurrencies("-12345.67 ISO4217-EUR", nil, ISO4217Currencies)
-	if err != nil {
-		t.Errorf("NewFromStringWithCurrencies() failed: %v", err)
-	}
+	val := MustFromString("-12345.67 ISO4217-EUR")
 
 	jsonBytes, err := json.Marshal(val)
 	if err != nil {
@@ -24,8 +21,7 @@ func TestJSONMarshalling(t *testing.T) {
 		t.Errorf("json.Marshal() = %q: want %q", jsonBytes, correct)
 	}
 
-	val2 := NewWithCurrencies(ISO4217Currencies)
-
+	var val2 Value
 	if err := json.Unmarshal(jsonBytes, &val2); err != nil {
 		t.Errorf("json.Unmarshal() failed: %v", err)
 	}
@@ -36,10 +32,7 @@ func TestJSONMarshalling(t *testing.T) {
 }
 
 func TestJSONMarshalling2(t *testing.T) {
-	val, err := NewFromStringWithCurrencies("-12345.67", nil, ISO4217Currencies)
-	if err != nil {
-		t.Errorf("NewFromStringWithCurrencies() failed: %v", err)
-	}
+	val := MustFromString("-12345.67")
 
 	jsonBytes, err := json.Marshal(val)
 	if err != nil {
@@ -51,8 +44,7 @@ func TestJSONMarshalling2(t *testing.T) {
 		t.Errorf("json.Marshal() = %q: want %q", jsonBytes, correct)
 	}
 
-	val2 := NewWithCurrencies(ISO4217Currencies)
-
+	var val2 Value
 	if err := json.Unmarshal(jsonBytes, &val2); err != nil {
 		t.Errorf("json.Unmarshal() failed: %v", err)
 	}
@@ -80,14 +72,14 @@ func TestSQLite(t *testing.T) {
 	}
 
 	// Create test entry.
-	val := RequireFromStringWithCurrencies("-12345.67", ISO4217Currencies["EUR"])
+	val := MustFromString("-12345.67 ISO4217-EUR")
 	e := &customer{
 		ID:      1,
 		Balance: val,
 	}
 
 	// Create test entry.
-	val2 := RequireFromStringWithCurrencies("-12345.67", nil)
+	val2 := MustFromString("-12345.67")
 	e2 := &customer{
 		ID:      2,
 		Balance: val2,
@@ -112,9 +104,7 @@ func TestSQLite(t *testing.T) {
 	}
 	defer stmt.Close()
 
-	eRead := &customer{
-		Balance: NewWithCurrencies(ISO4217Currencies),
-	}
+	eRead := new(customer)
 
 	err = stmt.QueryRow(1).Scan(&eRead.ID, &eRead.Balance)
 	if err != nil {
@@ -125,9 +115,7 @@ func TestSQLite(t *testing.T) {
 		t.Errorf("eRead.Balance = %v, want %v", eRead.Balance, e.Balance)
 	}
 
-	eRead2 := &customer{
-		Balance: NewWithCurrencies(ISO4217Currencies),
-	}
+	eRead2 := new(customer)
 
 	err = stmt.QueryRow(2).Scan(&eRead2.ID, &eRead2.Balance)
 	if err != nil {

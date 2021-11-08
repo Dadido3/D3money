@@ -9,114 +9,63 @@ import (
 
 // Value represents a monetary value in a specific currency.
 type Value struct {
-	value decimal.Decimal
-
-	// Currency can be nil.
-	currency Currency
-
-	// List(s) of possible currencies to chose from.
-	// This is used when unmarshalling from some data structure into a d3money.Value object.
-	// Note: I don't want to use a global list of currencies for unmarshalling, as it may cause problems and is less customizable.
-	currencyStandards []map[string]Currency
-}
-
-// NewWithCurrencies returns a value object with the given currencyStandards (Maps of available currencies) set.
-// This should be used before unmarshalling, otherwise currencies can't be matched by their codes.
-func NewWithCurrencies(currencyStandards ...map[string]Currency) Value {
-	return Value{
-		currencyStandards: currencyStandards,
-	}
+	value    decimal.Decimal
+	currency Currency // Can be nil.
 }
 
 // NewFromString returns a value object from the given string.
-// No currency matching will be done, and no currency will be given.
-// If there is a currency code in the string, this function will return an error.
+// The string can contain a currency by its unique code.
 // This will not use any locale specific formatting, and is not suited for input from humans without any preprocessing.
 //
 // Examples:
 //	NewFromString("-10000.123")             // Returns a currency-less value.
-//	NewFromString("-10000.123 ISO4217-EUR") // Returns an error, as the currency in the string can't be matched/found.
+//	NewFromString("-10000.123 ISO4217-EUR") // Returns a value with the EUR currency defined by ISO 4217.
+//	NewFromString("-10000.123 EUR")         // Returns an error, as the currency in the string can't be matched/found.
+//	NewFromString("-10000.123 FOO-BAR")     // Result depends on whether the the currency "FOO-BAR" is registered. See `Currencies.Add(...)`.
 func NewFromString(str string) (Value, error) {
-	val, _, err := parse(str, nil)
+	val, cur, err := parse(str, Currencies, nil)
 	if err != nil {
 		return Value{}, err
 	}
 
-	return Value{value: val}, nil
+	return Value{value: val, currency: cur}, nil
 }
 
-// NewFromStringWithCurrency returns a value object from the given string.
-// The field cur can be used to override the currency.
+// NewFromStringAndCurrency returns a value object from the given string.
+// The field cur can be used to define the currency.
+// The string can contain a currency by its unique code, but it's checked whether it matches with the field cur.
 // This will not use any locale specific formatting, and is not suited for input from humans without any preprocessing.
 //
 // Examples:
-//	NewFromStringWithCurrency("-10000.123", nil)                                  // Returns a currency-less value.
-//	NewFromStringWithCurrency("-10000.123 ISO4217-EUR", nil)                      // Returns an error, as the currency in the string can't be matched/found.
-//	NewFromStringWithCurrency("-10000.123", ISO4217Currencies["EUR"])             // Returns a value with EUR currency.
-//	NewFromStringWithCurrency("-10000.123 ISO4217-EUR", ISO4217Currencies["EUR"]) // Returns a value with EUR currency.
-//	NewFromStringWithCurrency("-10000.123 ISO4217-USD", ISO4217Currencies["EUR"]) // Returns an error, as the currency in the string can't be matched/found.
-func NewFromStringWithCurrency(str string, cur Currency) (Value, error) {
-	// Add currency override to match list, so that it can be matched and checked.
-	var currencies map[string]Currency
-	if cur != nil {
-		currencies = map[string]Currency{cur.Code(): cur}
-	}
-
-	// Parse string.
-	val, newCur, err := parse(str, currencies)
+//	NewFromStringAndCurrency("-10000.123", nil)                                         // Returns a currency-less value.
+//	NewFromStringAndCurrency("-10000.123 ISO4217-EUR", nil)                             // Returns an error, as the currency differs from the one defined in field cur.
+//	NewFromStringAndCurrency("-10000.123", ISO4217Currencies.ByCode("EUR"))             // Returns a value with EUR currency.
+//	NewFromStringAndCurrency("-10000.123 ISO4217-EUR", ISO4217Currencies.ByCode("EUR")) // Returns a value with EUR currency.
+//	NewFromStringAndCurrency("-10000.123 ISO4217-USD", ISO4217Currencies.ByCode("EUR")) // Returns an error, as the currency differs from the one defined in field cur.
+//	NewFromStringAndCurrency("-10000.123 FOO-BAR", nil)                                 // Result depends on whether the the currency "FOO-BAR" is registered. See `Currencies.Add(...)`.
+//	NewFromStringAndCurrency("-10000.123", FooBarCurrency)                              // Returns a value with custom currency.
+//	NewFromStringAndCurrency("-10000.123 FOO-BAR", FooBarCurrency)                      // Returns a value with custom currency. This assumes that the unique code of that currency is "FOO-BAR".
+func NewFromStringAndCurrency(str string, cur Currency) (Value, error) {
+	val, newCur, err := parse(str, Currencies, cur)
 	if err != nil {
 		return Value{}, err
 	}
 
-	// Override currency, if the string doesn't contain any currency code.
+	// The string doesn't contain a unique code, overwrite it with the user defined currency.
 	if newCur == nil {
 		newCur = cur
+	}
+
+	// Check if the parsed and the defined currencies match.
+	// They will always match if the string doesn't contain a unique code.
+	if newCur != cur {
+		return Value{}, fmt.Errorf("the matched currency %q of the string doesn't match with the given one %q", newCur, cur)
 	}
 
 	return Value{value: val, currency: newCur}, nil
 }
 
-// NewFromStringWithCurrencies returns a value object from the given string.
-// The field cur can be used to override the currency.
-// The field currencies is used to define currencies for matching.
-// This will not use any locale specific formatting, and is not suited for input from humans without any preprocessing.
-//
-// Examples:
-//	NewFromStringWithCurrencies("-10000.123", nil, nil)                                                // Returns a currency-less value.
-//	NewFromStringWithCurrencies("-10000.123", nil, ISO4217Currencies)                                  // Returns a currency-less value.
-//	NewFromStringWithCurrencies("-10000.123 ISO4217-EUR", nil, ISO4217Currencies)                      // Returns a value with EUR currency.
-//	NewFromStringWithCurrencies("-10000.123", ISO4217Currencies["EUR"], ISO4217Currencies)             // Returns a value with EUR currency.
-//	NewFromStringWithCurrencies("-10000.123 ISO4217-EUR", ISO4217Currencies["EUR"], ISO4217Currencies) // Returns a value with EUR currency.
-//	NewFromStringWithCurrencies("-10000.123", ISO4217Currencies["EUR"], nil)                           // Returns a value with EUR currency.
-//	NewFromStringWithCurrencies("-10000.123 ISO4217-EUR", ISO4217Currencies["EUR"], nil)               // Returns a value with EUR currency.
-//	NewFromStringWithCurrencies("-10000.123 ISO4217-EUR", nil, nil)                                    // Returns an error, as the currency in the string can't be matched/found.
-//	NewFromStringWithCurrencies("-10000.123 ISO4217-USD", ISO4217Currencies["EUR"], ISO4217Currencies) // Returns an error, as the currencies don't match.
-func NewFromStringWithCurrencies(str string, cur Currency, currencyStandards ...map[string]Currency) (Value, error) {
-	// Add currency override to match list, so that it can be matched and checked.
-	if cur != nil {
-		currencies := map[string]Currency{cur.Code(): cur}
-		currencyStandards = append([]map[string]Currency{currencies}, currencyStandards...)
-	}
-
-	// Parse string.
-	val, newCur, err := parse(str, currencyStandards...)
-	if err != nil {
-		return Value{}, err
-	}
-
-	if newCur == nil {
-		newCur = cur
-	}
-
-	// Check currency.
-	if cur != nil && newCur != nil && cur != newCur {
-		return Value{}, fmt.Errorf("parsed %q and given currency %q don't match", newCur, cur)
-	}
-
-	return Value{value: val, currency: newCur}, nil
-}
-
-// RequireFromString returns a value object from the given string.
+// MustFromString returns a value object from the given string.
 // No currency matching will be done, and no currency will be given.
 // If there is a currency code in the string, this function will return an error.
 // This will not use any locale specific formatting, and is not suited for input from humans without any preprocessing.
@@ -124,7 +73,7 @@ func NewFromStringWithCurrencies(str string, cur Currency, currencyStandards ...
 // In case of an error, this will panic.
 //
 // For examples, see NewFromString().
-func RequireFromString(str string) Value {
+func MustFromString(str string) Value {
 	v, err := NewFromString(str)
 	if err != nil {
 		panic(err)
@@ -133,42 +82,29 @@ func RequireFromString(str string) Value {
 	return v
 }
 
-// RequireFromStringWithCurrency returns a value object from the given string.
-// The field cur can be used to override the currency.
+// MustFromStringAndCurrency returns a value object from the given string.
+// The field cur can be used to define the currency.
+// The string can contain a currency by its unique code, but it's checked whether it matches with the field cur.
 // This will not use any locale specific formatting, and is not suited for input from humans without any preprocessing.
 //
 // In case of an error, this will panic.
 //
 // For examples, see NewFromStringWithCurrency().
-func RequireFromStringWithCurrency(str string, cur Currency) Value {
-	v, err := NewFromStringWithCurrency(str, cur)
+func MustFromStringAndCurrency(str string, cur Currency) Value {
+	v, err := NewFromStringAndCurrency(str, cur)
 	if err != nil {
-		panic(err)
+		panic(fmt.Sprintf("failed to create currency: %v", err))
 	}
 
 	return v
 }
 
-// RequireFromStringWithCurrencies returns a value object from the given string.
-// The field cur can be used to override the currency.
-// The field currencies is used to define currencies for matching.
-// This will not use any locale specific formatting, and is not suited for input from humans without any preprocessing.
+// parse takes a string and parses its value and currency delimited by a space or non breaking space ("Value UniqueCode").
+// The additionalCurrency or the list of currencies is used for matching/checking the unique code.
+// A match from additionalCurrency has a higher priority than a match from the list of currencies.
 //
-// In case of an error, this will panic.
-//
-// For examples, see NewFromStringWithCurrencies().
-func RequireFromStringWithCurrencies(str string, cur Currency, currencyStandards ...map[string]Currency) Value {
-	v, err := NewFromStringWithCurrencies(str, cur, currencyStandards...)
-	if err != nil {
-		panic(err)
-	}
-
-	return v
-}
-
-// parse takes a string and parses its value and currency.
-// The list of currencyStandards is used for matching.
-func parse(str string, currencyStandards ...map[string]Currency) (decimal.Decimal, Currency, error) {
+// This will always return a currency if the input string contains a value and currency pair that is correctly delimited, in any other case it will return nil as currency!
+func parse(str string, cc CurrencyCollection, additionalCurrency Currency) (decimal.Decimal, Currency, error) {
 	var valStr, curStr string
 	var matchedCurrency Currency
 
@@ -185,11 +121,22 @@ func parse(str string, currencyStandards ...map[string]Currency) (decimal.Decima
 		// String (probably) contains a number value + unique currency code.
 		valStr, curStr = splitted[0], splitted[1]
 
-		// Match currency.
-		var err error
-		matchedCurrency, err = MatchCurrencyByUniqueCode(curStr, currencyStandards...)
-		if err != nil {
-			return decimal.Zero, nil, err
+		// Check if additionalCurrency matches with the unique code.
+		if additionalCurrency != nil {
+			if curStr == additionalCurrency.UniqueCode() {
+				matchedCurrency = additionalCurrency
+			}
+		}
+
+		// If there is no match, look in collection.
+		if matchedCurrency == nil && cc != nil {
+			matchedCurrency = cc.CurrencyByUniqueCode(curStr)
+			// TODO: Maybe check if this currency and the previous matched currency are the same. Otherwise they would violate the uniqueness constraint of unique codes
+		}
+
+		// If there is still no match, return error.
+		if matchedCurrency == nil {
+			return decimal.Zero, nil, fmt.Errorf("unknown unique currency code %q", curStr)
 		}
 
 	default:
