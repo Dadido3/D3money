@@ -114,7 +114,6 @@ func (c *ISO4217Currency) String() string {
 //  - Removed "ENTITY" column
 //  - Removed duplicate entries (due to removal of the "ENTITY" column)
 //  - Add "symbol" and "shortSymbol" columns that contain symbols which are NOT part of ISO 4217. Based on https://web.archive.org/web/20111129141202/http://fx.sauder.ubc.ca/currency_table.html and https://wikipedia.org
-// TODO: Add more currency symbols, check symbols for correctness, add symbol plural variants
 var iso4217Currencies = []Currency{
 	&ISO4217Currency{alphabeticCode: "AFN", numericCode: 971, symbol: "؋", shortSymbol: "", decimalPlaces: 2, name: "Afghani"},
 	&ISO4217Currency{alphabeticCode: "EUR", numericCode: 978, symbol: "€", shortSymbol: "", decimalPlaces: 2, name: "Euro"},

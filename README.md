@@ -31,7 +31,7 @@ And then import it with
 import "github.com/Dadido3/D3money"
 ```
 
-### Create money values
+### Values
 
 A simple way to create a monetary value is by using `FromString(...)`.
 
@@ -63,11 +63,18 @@ Selecting from all available currencies.
 eur := money.Currencies.ByUniqueCode("ISO4217-EUR")
 ```
 
-Selecting from a single currency standard by code or unique code.
+Selecting a currency from a currency standard by its code or unique code.
+
+```go
+usd := money.ISO4217Currencies.ByCode("USD")
+eur := money.ISO4217Currencies.ByUniqueCode("ISO4217-EUR")
+```
+
+Assert currency standard.
 
 ```go
 eur := money.ISO4217Currencies.ByUniqueCode("ISO4217-EUR")
-usd := money.ISO4217Currencies.ByCode("USD")
+_, isISO4217 := eur.(money.ISO4217Currency) // isISO4217 will be true
 ```
 
 ### Custom currencies
@@ -85,5 +92,5 @@ Afterwards you can register the currency by adding it to the library by using
 
 ```go
 err := money.Currencies.Add(customCurrency)      // Register single custom currency.
-err := money.Currencies.Add(customCurrencies...) // Register multiple custom currencies.
+err := money.Currencies.Add(customCurrencies...) // Register list of custom currencies.
 ```

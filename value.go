@@ -113,6 +113,8 @@ func parse(str string, cc CurrencyCollection, additionalCurrency Currency) (deci
 	var valStr, curStr string
 	var matchedCurrency Currency
 
+	// TODO: Check if cc contains a currency that violates the uniqueness constraint with the additionalCurrency.
+
 	str = strings.ReplaceAll(str, "\u00A0", " ")
 
 	// Parse expression.
@@ -136,7 +138,6 @@ func parse(str string, cc CurrencyCollection, additionalCurrency Currency) (deci
 		// If there is no match, look in collection.
 		if matchedCurrency == nil && cc != nil {
 			matchedCurrency = cc.ByUniqueCode(curStr)
-			// TODO: Maybe check if this currency and the previous matched currency are the same. Otherwise they would violate the uniqueness constraint of unique codes
 		}
 
 		// If there is still no match, return error.
