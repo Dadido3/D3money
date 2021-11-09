@@ -1,4 +1,9 @@
-package d3money
+// Copyright (c) 2021 David Vogel
+//
+// This software is released under the MIT License.
+// https://opensource.org/licenses/MIT
+
+package money
 
 // Equal returns if a monetary value is equal to another.
 // If the currency is different between the values, the result will always be false.

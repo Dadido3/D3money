@@ -1,4 +1,9 @@
-package d3money
+// Copyright (c) 2021 David Vogel
+//
+// This software is released under the MIT License.
+// https://opensource.org/licenses/MIT
+
+package money
 
 // iso4217Name is the name of the currency standard.
 const iso4217Name = "ISO4217"

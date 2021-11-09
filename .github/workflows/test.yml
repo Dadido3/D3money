@@ -1,11 +1,11 @@
-name: Test
+name: build and test
 
 on: [push, pull_request]
 
 jobs:
 
   build:
-    name: Test
+    name: build and test
     runs-on: ubuntu-latest
     steps:
 

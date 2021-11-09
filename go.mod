@@ -1,11 +1,11 @@
-module github.com/Dadido3/d3money
+module github.com/Dadido3/D3money
 
 go 1.17
 
 require (
-	github.com/mattn/go-sqlite3 v1.14.7
-	github.com/shopspring/decimal v1.2.0
-	gorm.io/gorm v1.21.10
+	github.com/mattn/go-sqlite3 v1.14.9
+	github.com/shopspring/decimal v1.3.1
+	gorm.io/gorm v1.22.2
 )
 
 require (
