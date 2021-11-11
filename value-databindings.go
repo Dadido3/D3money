@@ -7,6 +7,7 @@ package money
 
 import (
 	"database/sql/driver"
+	"encoding/binary"
 	"encoding/json"
 	"fmt"
 
@@ -46,7 +47,7 @@ func (v *Value) UnmarshalJSON(data []byte) error {
 	var cur Currency
 	if d.Currency != "" {
 		if cur = Currencies.ByUniqueCode(d.Currency); cur == nil {
-			return fmt.Errorf("can't find unique currency code %q", d.Currency)
+			return fmt.Errorf("can't find currency with unique code %q", d.Currency)
 		}
 	}
 
@@ -55,15 +56,69 @@ func (v *Value) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// Value implements the valuer interface of databases.
-func (v Value) Value() (driver.Value, error) {
+// MarshalBinary implements the encoding.BinaryMarshaler interface.
+func (v Value) MarshalBinary() ([]byte, error) {
+	data1 := []byte{0, 0, 0, 0}
 	if v.currency != nil {
-		// Currency defined, output "Value UniqueCode" pair. Use a normal space for database storage.
-		return fmt.Sprintf("%s %s", v.Decimal(), v.currency.UniqueCode()), nil
+		binary.BigEndian.PutUint32(data1, uint32(v.currency.UniqueID()))
 	}
 
-	// No currency defined, only output the value.
-	return v.Decimal().String(), nil
+	data2, err := v.value.MarshalBinary()
+	if err != nil {
+		return nil, err
+	}
+
+	return append(data1, data2...), nil
+}
+
+// UnmarshalBinary implements the encoding.BinaryUnmarshaler interface.
+func (v *Value) UnmarshalBinary(data []byte) error {
+	if len(data) < 4 {
+		return fmt.Errorf("error decoding binary %v: expected at least 4 bytes, got %d", data, len(data))
+	}
+
+	if uniqueID := int32(binary.BigEndian.Uint32(data[:4])); uniqueID == 0 {
+		v.currency = nil
+	} else {
+		cur := Currencies.ByUniqueID(uniqueID)
+		if cur == nil {
+			return fmt.Errorf("can't find currency with unique ID %d", uniqueID)
+		}
+		v.currency = cur
+	}
+
+	return v.value.UnmarshalBinary(data[4:])
+}
+
+// MarshalText implements the encoding.TextMarshaler interface.
+func (v Value) MarshalText() ([]byte, error) {
+	return []byte(v.String()), nil
+}
+
+// UnmarshalText implements the encoding.TextUnmarshaler interface.
+func (v *Value) UnmarshalText(text []byte) error {
+	val, cur, err := parse(string(text), Currencies, nil)
+	if err != nil {
+		return fmt.Errorf("failed to parse text %q: %w", string(text), err)
+	}
+
+	v.value, v.currency = val, cur
+	return nil
+}
+
+// GobEncode implements the gob.GobEncoder interface.
+func (v Value) GobEncode() ([]byte, error) {
+	return v.MarshalBinary()
+}
+
+// GobDecode implements the gob.GobDecoder interface.
+func (v *Value) GobDecode(data []byte) error {
+	return v.UnmarshalBinary(data)
+}
+
+// Value implements the valuer interface of databases.
+func (v Value) Value() (driver.Value, error) {
+	return v.String(), nil
 }
 
 // Scan fills the object with data matching the given value from the database.

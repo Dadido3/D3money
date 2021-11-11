@@ -36,6 +36,23 @@ func FromString(str string) (Value, error) {
 	return Value{value: val, currency: cur}, nil
 }
 
+// MustFromString returns a value object from the given string.
+// No currency matching will be done, and no currency will be given.
+// If there is a currency code in the string, this function will return an error.
+// This will not use any locale specific formatting, and is not suited for input from humans without any preprocessing.
+//
+// In case of an error, this will panic.
+//
+// For examples, see FromString().
+func MustFromString(str string) Value {
+	v, err := FromString(str)
+	if err != nil {
+		panic(err)
+	}
+
+	return v
+}
+
 // FromStringAndCurrency returns a value object from the given string.
 // The field cur can be used to define the currency.
 // The string can contain a currency by its unique code, but it's checked whether it matches with the field cur.
@@ -70,23 +87,6 @@ func FromStringAndCurrency(str string, cur Currency) (Value, error) {
 	return Value{value: val, currency: newCur}, nil
 }
 
-// MustFromString returns a value object from the given string.
-// No currency matching will be done, and no currency will be given.
-// If there is a currency code in the string, this function will return an error.
-// This will not use any locale specific formatting, and is not suited for input from humans without any preprocessing.
-//
-// In case of an error, this will panic.
-//
-// For examples, see FromString().
-func MustFromString(str string) Value {
-	v, err := FromString(str)
-	if err != nil {
-		panic(err)
-	}
-
-	return v
-}
-
 // MustFromStringAndCurrency returns a value object from the given string.
 // The field cur can be used to define the currency.
 // The string can contain a currency by its unique code, but it's checked whether it matches with the field cur.
@@ -104,9 +104,48 @@ func MustFromStringAndCurrency(str string, cur Currency) Value {
 	return v
 }
 
+// FromDecimal returns a value object from the given shopspring/decimal and currency.
+func FromDecimal(val decimal.Decimal, cur Currency) Value {
+	return Value{value: val, currency: cur}
+}
+
+// FromFloat64 returns a value object from the given float64 and currency.
+func FromFloat64(f float64, cur Currency) Value {
+	return Value{value: decimal.NewFromFloat(f), currency: cur}
+}
+
+// FromFloat32 returns a value object from the given float32 and currency.
+func FromFloat32(f float32, cur Currency) Value {
+	return Value{value: decimal.NewFromFloat32(f), currency: cur}
+}
+
+// FromInt64 returns a value object from the given int64 and currency.
+func FromInt64(i int64, cur Currency) Value {
+	return Value{value: decimal.NewFromInt(i), currency: cur}
+}
+
+// FromInt32 returns a value object from the given int32 and currency.
+func FromInt32(i int32, cur Currency) Value {
+	return Value{value: decimal.NewFromInt32(i), currency: cur}
+}
+
+// String returns the monetary value as a "Value UniqueCode" pair.
+// This is locale independent.
+func (v Value) String() string {
+	if v.currency != nil {
+		// Output "Value UniqueCode" pair.
+		return v.value.String() + " " + v.currency.UniqueCode()
+	}
+
+	// If there is no currency output "Value" only.
+	return v.value.String()
+}
+
 // parse takes a string and parses its value and currency delimited by a space or non breaking space ("Value UniqueCode").
 // The additionalCurrency or the list of currencies is used for matching/checking the unique code.
 // A match from additionalCurrency has a higher priority than a match from the list of currencies.
+//
+// This can parse the output of value.String() without loss of information.
 //
 // This will always return a currency if the input string contains a value and currency pair that is correctly delimited, in any other case it will return nil as currency!
 func parse(str string, cc CurrencyCollection, additionalCurrency Currency) (decimal.Decimal, Currency, error) {
@@ -159,25 +198,9 @@ func parse(str string, cc CurrencyCollection, additionalCurrency Currency) (deci
 
 }
 
-// Decimal returns the value as a shopspring/decimal number.
-func (v Value) Decimal() decimal.Decimal {
-	return v.value
-}
-
 // Currency returns the used currency.
 func (v Value) Currency() Currency {
 	return v.currency
-}
-
-// String returns the monetary value as a "Value UniqueCode" pair.
-// This is locale independent.
-func (v Value) String() string {
-	if v.currency != nil {
-		return fmt.Sprintf("%s %s", v.value.String(), v.currency.UniqueCode())
-	}
-
-	// Fallback if there is no currency.
-	return v.value.String()
 }
 
 // Format implements the fmt.Formatter interface.

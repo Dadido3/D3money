@@ -5,17 +5,18 @@ A library to handle monetary values and currencies.
 ## Features
 
 - Uses [shopspring/decimal](https://github.com/shopspring/decimal) for arbitrary-precision fixed-point decimal numbers
+- Immutable by default for safety
 - ISO 4217 currencies
 - Extendable to more/custom currencies without risking overlaps of codes or IDs
 - Tests to ensure uniqueness and validity of currencies
-- Data-bindings for JSON and SQL based databases
+- Data-bindings for JSON, Binary, Text, Gob encodings
+- Implements scanner and valuer interfaces for databases
 - Implements `GormDBDataTypeInterface`
 
 Planned:
 
 - [ ] List of cryptocurrencies
 - [ ] Formatting of values with specified locale
-- [ ] Wrap mathematical operations of `shopspring/decimal`
 
 ## Usage
 
@@ -63,7 +64,7 @@ Selecting from all available currencies.
 eur := money.Currencies.ByUniqueCode("ISO4217-EUR")
 ```
 
-Selecting a currency from a currency standard by its code or unique code.
+Selecting a currency from ISO 4217 by its code or unique code.
 
 ```go
 usd := money.ISO4217Currencies.ByCode("USD")
@@ -73,7 +74,7 @@ eur := money.ISO4217Currencies.ByUniqueCode("ISO4217-EUR")
 Assert currency standard.
 
 ```go
-eur := money.ISO4217Currencies.ByUniqueCode("ISO4217-EUR")
+eur := money.Currencies.ByUniqueCode("ISO4217-EUR")
 _, isISO4217 := eur.(money.ISO4217Currency) // isISO4217 will be true
 ```
 
@@ -82,13 +83,13 @@ _, isISO4217 := eur.(money.ISO4217Currency) // isISO4217 will be true
 To create custom currencies, you need to create a type that implements the `money.Currency` interface.
 For an example, see [currency-iso4217.go](currency-iso4217.go).
 
-You can check if your instances are valid by using
+You can check if your instances are valid by using.
 
 ```go
 err := money.ValidateCurrency(customCurrency)
 ```
 
-Afterwards you can register the currency by adding it to the library by using
+Afterwards you can register the currency by adding it to the library by using.
 
 ```go
 err := money.Currencies.Add(customCurrency)      // Register single custom currency.

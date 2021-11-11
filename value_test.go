@@ -26,6 +26,12 @@ func (c *fooBarCurrency) DecimalPlaces() (int, bool) { return 2, true }
 
 var FooBarCurrency Currency = new(fooBarCurrency)
 
+func TestFooBarCurrency(t *testing.T) {
+	if err := ValidateCurrency(FooBarCurrency); err != nil {
+		t.Errorf("Failed to validate currency %q: %v", FooBarCurrency, err)
+	}
+}
+
 func TestFromString(t *testing.T) {
 	type args struct {
 		str string

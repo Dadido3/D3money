@@ -30,6 +30,11 @@ var regexFindNonAlphaNumeric = regexp.MustCompile("[^a-zA-Z0-9]")
 func ValidateCurrency(c Currency) error {
 	standardName, code, uniqueCode, symbol, shortSymbol := c.StandardName(), c.Code(), c.UniqueCode(), c.Symbol(), c.ShortSymbol()
 
+	// No currency should have an unique ID of 0.
+	if c.UniqueID() == 0 {
+		return fmt.Errorf("unique ID is 0. This value is reserved for \"no currency\"")
+	}
+
 	// The code should only contain alpha numeric characters.
 	if regexFindNonAlphaNumeric.MatchString(code) {
 		firstMatch := regexFindNonAlphaNumeric.FindString(code)
