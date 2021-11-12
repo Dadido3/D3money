@@ -58,7 +58,7 @@ func TestFooBarCurrencies(t *testing.T) {
 
 	for _, currency := range currencies {
 		if err := ValidateCurrency(currency); err != nil {
-			t.Errorf("ValidateCurrency() failed to validate currency %q: %v", currency, err)
+			t.Errorf("ValidateCurrency() failed to validate currency %s: %v", helperCurrencyUniqueCode(currency), err)
 		}
 	}
 }
@@ -76,7 +76,7 @@ func TestValidateCurrency(t *testing.T) {
 
 	for _, currency := range currencies {
 		if err := ValidateCurrency(currency); err == nil {
-			t.Errorf("ValidateCurrency() failed to validate currency %q. Expected error", currency)
+			t.Errorf("ValidateCurrency() failed to validate currency %s. Expected error", helperCurrencyUniqueCode(currency))
 		}
 	}
 }

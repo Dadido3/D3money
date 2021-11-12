@@ -39,18 +39,18 @@ func ValidateCurrency(c Currency) error {
 	// The code should only contain alphanumeric characters.
 	if regexFindNonAlphaNumeric.MatchString(code) {
 		firstMatch := regexFindNonAlphaNumeric.FindString(code)
-		return &ErrorInvalidCurrency{fmt.Sprintf("result of Code() contains illegal character(s) %q", firstMatch)}
+		return &ErrorInvalidCurrency{fmt.Sprintf("code contains illegal character(s) %q", firstMatch)}
 	}
 
 	// The standard name should only contain alphanumeric characters.
 	if regexFindNonAlphaNumeric.MatchString(standard) {
 		firstMatch := regexFindNonAlphaNumeric.FindString(standard)
-		return &ErrorInvalidCurrency{fmt.Sprintf("result of Standard() contains illegal character(s) %q", firstMatch)}
+		return &ErrorInvalidCurrency{fmt.Sprintf("standard name contains illegal character(s) %q", firstMatch)}
 	}
 
 	// Check if the unique code is in the following form: "Standard-Code".
 	if fmt.Sprintf("%s-%s", standard, code) != uniqueCode {
-		return &ErrorInvalidCurrency{fmt.Sprintf("unique name %q is not of the form \"Standard-Code\". Expected \"%s-%s\"", uniqueCode, standard, code)}
+		return &ErrorInvalidCurrency{fmt.Sprintf("unique code %q is not of the form \"Standard-Code\". Expected \"%s-%s\"", uniqueCode, standard, code)}
 	}
 
 	// Check for illegal result of DecimalPlaces().

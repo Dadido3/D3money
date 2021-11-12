@@ -130,7 +130,7 @@ func (v Value) Mul(v2 Value) (Value, error) {
 	var currency Currency
 
 	if v.currency != nil && v2.currency != nil {
-		return Value{}, fmt.Errorf("can't multiply two values with currencies %q and %q", v.currency, v2.currency)
+		return Value{}, fmt.Errorf("can't multiply two values with currencies %s and %s", helperCurrencyUniqueCode(v.currency), helperCurrencyUniqueCode(v2.currency))
 	} else if v.currency != nil {
 		currency = v.currency
 	} else if v2.currency != nil {

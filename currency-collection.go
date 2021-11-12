@@ -137,13 +137,13 @@ func (cc *currencyCollectionSet) add(c Currency) error {
 
 	if foundByUniqueID && currencyByUniqueID != c {
 		// There is another currency with the same unique ID.
-		return fmt.Errorf("currency %q has the same unique ID %d as the already existing currency %q", c, uniqueID, currencyByUniqueID)
+		return fmt.Errorf("currency %s has the same unique ID %d as the already existing currency %s", helperCurrencyUniqueCode(c), uniqueID, helperCurrencyUniqueCode(currencyByUniqueID))
 	} else if foundByUniqueCode && currencyByUniqueCode != c {
 		// There is another currency with the same unique code.
 		return fmt.Errorf("currency with unique ID %d has the same unique code %q as the already existing currency with unique ID %d", uniqueID, uniqueCode, currencyByUniqueCode.UniqueID())
 	} else if foundByNumericCode && currencyByNumericCode != c {
 		// There is another currency with the same numeric code.
-		return fmt.Errorf("currency %q has the same numeric code %d as the already existing currency %q", c, numericCode, currencyByNumericCode)
+		return fmt.Errorf("currency %s has the same numeric code %d as the already existing currency %s", helperCurrencyUniqueCode(c), numericCode, helperCurrencyUniqueCode(currencyByNumericCode))
 	} else if foundByCode && currencyByCode != c {
 		// There is another currency with the same code.
 		return fmt.Errorf("currency with unique ID %d has the same code %q as the already existing currency with unique ID %d", uniqueID, code, currencyByCode.UniqueID())

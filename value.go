@@ -81,7 +81,7 @@ func FromStringAndCurrency(str string, cur Currency) (Value, error) {
 	// Check if the parsed and the defined currencies match.
 	// They will always match if the string doesn't contain a unique code.
 	if newCur != cur {
-		return Value{}, fmt.Errorf("the matched currency %q of the string doesn't match with the given one %q", newCur, cur)
+		return Value{}, fmt.Errorf("the matched currency %s of the string doesn't match with the given one %s", helperCurrencyUniqueCode(newCur), helperCurrencyUniqueCode(cur))
 	}
 
 	return Value{value: val, currency: newCur}, nil
@@ -98,7 +98,7 @@ func FromStringAndCurrency(str string, cur Currency) (Value, error) {
 func MustFromStringAndCurrency(str string, cur Currency) Value {
 	v, err := FromStringAndCurrency(str, cur)
 	if err != nil {
-		panic(fmt.Sprintf("failed to create currency: %v", err))
+		panic(fmt.Sprintf("failed to create monetary value: %v", err))
 	}
 
 	return v

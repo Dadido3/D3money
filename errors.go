@@ -7,6 +7,16 @@ package money
 
 import "fmt"
 
+// helperCurrencyUniqueCode returns the unique code of the given currency in quotes, or the string "no currency" (Without quotes).
+// This helper should be used when formatting error messages.
+func helperCurrencyUniqueCode(c Currency) string {
+	if c != nil {
+		return `"` + c.UniqueCode() + `"`
+	}
+
+	return "no currency"
+}
+
 // ErrorInvalidCurrency is returned when the definition of a currency contains invalid or illegal values.
 type ErrorInvalidCurrency struct{ msg string }
 
@@ -16,14 +26,7 @@ func (e *ErrorInvalidCurrency) Error() string { return e.msg }
 type ErrorDifferentCurrencies struct{ c1, c2 Currency }
 
 func (e *ErrorDifferentCurrencies) Error() string {
-	if e.c1 == nil {
-		return fmt.Sprintf("the monetary values have two different currencies: no currency and %q", e.c2)
-	}
-	if e.c2 == nil {
-		return fmt.Sprintf("the monetary values have two different currencies: %q and no currency", e.c1)
-	}
-
-	return fmt.Sprintf("the monetary values have two different currencies: %q and %q", e.c1, e.c2)
+	return fmt.Sprintf("the monetary values have two different currencies: %s and %s", helperCurrencyUniqueCode(e.c1), helperCurrencyUniqueCode(e.c2))
 }
 
 // ErrorCantFindUniqueID is returned when no currency can be found for a given unique ID.
@@ -37,5 +40,5 @@ func (e *ErrorCantFindUniqueID) Error() string {
 type ErrorCantFindUniqueCode struct{ uniqueCode string }
 
 func (e *ErrorCantFindUniqueCode) Error() string {
-	return fmt.Sprintf("can't find currency with unique ID %q", e.uniqueCode)
+	return fmt.Sprintf("can't find currency with unique code %q", e.uniqueCode)
 }
