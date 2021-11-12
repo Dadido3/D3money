@@ -14,19 +14,19 @@ import (
 
 // testCurrency implements a custom currency for testing purposes.
 type testCurrency struct {
-	name, standard, code, symbol, shortSymbol string
-	uniqueID                                  int32
-	decimalPlaces                             int
-	hasSmallestUnit                           bool
+	name, standard, code, symbol, narrowSymbol string
+	uniqueID                                   int32
+	decimalPlaces                              int
+	hasSmallestUnit                            bool
 }
 
 func (c *testCurrency) Name() string               { return c.code }
-func (c *testCurrency) StandardName() string       { return c.standard }
+func (c *testCurrency) Standard() string           { return c.standard }
 func (c *testCurrency) UniqueID() int32            { return c.uniqueID }
-func (c *testCurrency) UniqueCode() string         { return c.StandardName() + "-" + c.Code() }
+func (c *testCurrency) UniqueCode() string         { return c.Standard() + "-" + c.Code() }
 func (c *testCurrency) Code() string               { return c.code }
 func (c *testCurrency) Symbol() string             { return c.symbol }
-func (c *testCurrency) ShortSymbol() string        { return c.shortSymbol }
+func (c *testCurrency) NarrowSymbol() string       { return c.narrowSymbol }
 func (c *testCurrency) DecimalPlaces() (int, bool) { return c.decimalPlaces, c.hasSmallestUnit }
 
 var (
