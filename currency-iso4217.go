@@ -56,16 +56,24 @@ func (c *ISO4217Currency) UniqueID() int32 {
 // Code returns a string representing the currency.
 // This representation is unique across different currency standards.
 //
-// Examples: "ISO4217-USD", "ISO4217-AUD", "ISO4217-EUR", "CRYPTO-BTC"
+// Examples: "ISO4217-USD", "ISO4217-AUD", "ISO4217-EUR", "CRYPTO-BTC".
 func (c *ISO4217Currency) UniqueCode() string {
 	return c.CodePrefix() + c.alphabeticCode
+}
+
+// NumericCode returns the numeric code of the currency.
+// This may be an ISO 4217 numeric code, depending on the currency type and is unique in a single currency standard.
+//
+// Examples: 840, 36, 978.
+func (c *ISO4217Currency) NumericCode() int {
+	return c.numericCode
 }
 
 // Code returns a string representing the currency.
 // This is the official code defined by the standard, but it may not be unique across different standards.
 // This may be an ISO 4217 code, depending on the currency type.
 //
-// Examples: "USD", "AUD", "EUR", "BTC"
+// Examples: "USD", "AUD", "EUR", "BTC".
 func (c *ISO4217Currency) Code() string {
 	return c.alphabeticCode
 }
@@ -74,7 +82,7 @@ func (c *ISO4217Currency) Code() string {
 // This may be ambiguous, and should only be used for formatting into a human readable format.
 // This also doesn't follow any official standard.
 //
-// Examples: "US$", "AU$", "€", "₿"
+// Examples: "US$", "AU$", "€", "₿".
 func (c *ISO4217Currency) Symbol() string {
 	return c.symbol
 }
@@ -84,7 +92,7 @@ func (c *ISO4217Currency) Symbol() string {
 // This needs additional context when used in text output, as it doesn't differentiate between all the dollar currencies.
 // This also doesn't follow any official standard.
 //
-// Examples: "$", "$", "€", "₿"
+// Examples: "$", "$", "€", "₿".
 func (c *ISO4217Currency) NarrowSymbol() string {
 	if c.narrowSymbol != "" {
 		return c.narrowSymbol

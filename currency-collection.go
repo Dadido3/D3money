@@ -16,6 +16,7 @@ type CurrencyCollection interface {
 	All() []Currency                         // All returns the full list of currencies that are contained in this collection.
 	ByUniqueID(uniqueID int32) Currency      // ByUniqueID finds a currency by its unique ID (e.g. 42170978).
 	ByUniqueCode(uniqueCode string) Currency // ByUniqueCode finds a currency by its unique code (e.g. "ISO4217-EUR").
+	ByNumericCode(code int) Currency         // ByNumericCode finds a currency by its numeric code (e.g. 978). This may not yield a result, as the numeric code is not unique across currency standards. Best is to use it only in combination with a collection of a single standard, like ISO4217Currencies.
 	ByCode(code string) Currency             // ByCode finds a currency by its code (e.g. "EUR"). This may not yield a result, as the code is not unique across currency standards. Best is to use it only in combination with a collection of a single standard, like ISO4217Currencies.
 
 	Add(c ...Currency) error // Add adds one or more currencies to this collection.
@@ -26,11 +27,12 @@ type CurrencyCollection interface {
 type currencyCollectionSet struct {
 	name string
 
-	all          []Currency
-	hasCurrency  map[Currency]struct{}
-	byUniqueID   map[int32]Currency
-	byUniqueCode map[string]Currency
-	byCode       map[string]Currency
+	all           []Currency
+	hasCurrency   map[Currency]struct{}
+	byUniqueID    map[int32]Currency
+	byUniqueCode  map[string]Currency
+	byNumericCode map[int]Currency
+	byCode        map[string]Currency
 }
 
 // Make sure this type implements the CurrencyCollection interface.
@@ -42,15 +44,16 @@ var _ CurrencyCollection = (*currencyCollectionSet)(nil)
 // If you combine multiple standards into a collection, set it to false.
 func NewCurrencyCollection(name string, singleStandard bool, listsOfCurrencies ...[]Currency) (CurrencyCollection, error) {
 	cc := &currencyCollectionSet{
-		name:         name,
-		hasCurrency:  map[Currency]struct{}{},
-		byUniqueID:   map[int32]Currency{},
-		byUniqueCode: map[string]Currency{},
-		byCode:       nil,
+		name:          name,
+		hasCurrency:   map[Currency]struct{}{},
+		byUniqueID:    map[int32]Currency{},
+		byUniqueCode:  map[string]Currency{},
+		byNumericCode: nil,
+		byCode:        nil,
 	}
 
 	if singleStandard {
-		cc.byCode = map[string]Currency{}
+		cc.byNumericCode, cc.byCode = map[int]Currency{}, map[string]Currency{}
 	}
 
 	for _, listOfCurrencies := range listsOfCurrencies {
@@ -93,6 +96,16 @@ func (cc *currencyCollectionSet) ByUniqueCode(uniqueCode string) Currency {
 	return cc.byUniqueCode[uniqueCode]
 }
 
+// ByNumericCode finds a currency by its numeric code (e.g. 978).
+// This may not yield a result, as the numeric code is not unique across currency standards.
+// Best is to use it only in combination with a collection of a single standard, like ISO4217Currencies.
+func (cc *currencyCollectionSet) ByNumericCode(numericCode int) Currency {
+	if cc.byNumericCode != nil {
+		return cc.byNumericCode[numericCode]
+	}
+	return nil
+}
+
 // ByCode finds a currency by its code (e.g. "EUR").
 // This may not yield a result, as the code is not unique across currency standards.
 // Best is to use it only in combination with a collection of a single standard, like ISO4217Currencies.
@@ -105,7 +118,7 @@ func (cc *currencyCollectionSet) ByCode(code string) Currency {
 
 // add adds a currency to this collection.
 func (cc *currencyCollectionSet) add(c Currency) error {
-	uniqueID, uniqueCode, code := c.UniqueID(), c.UniqueCode(), c.Code()
+	uniqueID, uniqueCode, numericCode, code := c.UniqueID(), c.UniqueCode(), c.NumericCode(), c.Code()
 
 	// Check if the currency already exists.
 	// Ignore duplicate entries, but prevent collisions of unique IDs, unique codes or codes.
@@ -116,6 +129,11 @@ func (cc *currencyCollectionSet) add(c Currency) error {
 	if cc.byCode != nil {
 		currencyByCode, foundByCode = cc.byCode[code]
 	}
+	var currencyByNumericCode Currency
+	var foundByNumericCode bool
+	if cc.byNumericCode != nil {
+		currencyByNumericCode, foundByNumericCode = cc.byNumericCode[numericCode]
+	}
 
 	if foundByUniqueID && currencyByUniqueID != c {
 		// There is another currency with the same unique ID.
@@ -123,6 +141,9 @@ func (cc *currencyCollectionSet) add(c Currency) error {
 	} else if foundByUniqueCode && currencyByUniqueCode != c {
 		// There is another currency with the same unique code.
 		return fmt.Errorf("currency with unique ID %d has the same unique code %q as the already existing currency with unique ID %d", uniqueID, uniqueCode, currencyByUniqueCode.UniqueID())
+	} else if foundByNumericCode && currencyByNumericCode != c {
+		// There is another currency with the same numeric code.
+		return fmt.Errorf("currency %q has the same numeric code %d as the already existing currency %q", c, numericCode, currencyByNumericCode)
 	} else if foundByCode && currencyByCode != c {
 		// There is another currency with the same code.
 		return fmt.Errorf("currency with unique ID %d has the same code %q as the already existing currency with unique ID %d", uniqueID, code, currencyByCode.UniqueID())
@@ -139,6 +160,9 @@ func (cc *currencyCollectionSet) add(c Currency) error {
 	cc.hasCurrency[c] = struct{}{}
 	cc.byUniqueID[uniqueID] = c
 	cc.byUniqueCode[uniqueCode] = c
+	if cc.byNumericCode != nil {
+		cc.byNumericCode[numericCode] = c
+	}
 	if cc.byCode != nil {
 		cc.byCode[code] = c
 	}

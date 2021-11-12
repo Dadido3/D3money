@@ -15,6 +15,7 @@ import (
 // testCurrency implements a custom currency for testing purposes.
 type testCurrency struct {
 	name, standard, code, symbol, narrowSymbol string
+	numericCode                                int
 	uniqueID                                   int32
 	decimalPlaces                              int
 	hasSmallestUnit                            bool
@@ -24,22 +25,58 @@ func (c *testCurrency) Name() string               { return c.code }
 func (c *testCurrency) Standard() string           { return c.standard }
 func (c *testCurrency) UniqueID() int32            { return c.uniqueID }
 func (c *testCurrency) UniqueCode() string         { return c.Standard() + "-" + c.Code() }
+func (c *testCurrency) NumericCode() int           { return c.numericCode }
 func (c *testCurrency) Code() string               { return c.code }
 func (c *testCurrency) Symbol() string             { return c.symbol }
 func (c *testCurrency) NarrowSymbol() string       { return c.narrowSymbol }
 func (c *testCurrency) DecimalPlaces() (int, bool) { return c.decimalPlaces, c.hasSmallestUnit }
 
 var (
-	testCurrency1          Currency = &testCurrency{"Bar", "FOO", "BAR", "|", "|", 1, 2, true}
-	testCurrencyCollision1 Currency = &testCurrency{"Bar", "FOZ", "BAR", "‖", "‖", 2, 2, true} // Collides with testCurrency1 on its code.
-	testCurrencyCollision2 Currency = &testCurrency{"Bar", "FOO", "BAR", "⫼", "⫼", 3, 2, true} // Collides with testCurrency1 on its code and unique code.
-	testCurrencyCollision3 Currency = &testCurrency{"Baz", "FOZ", "BAZ", "⟊", "⟊", 1, 2, true} // Collides with testCurrency1 on its unique ID.
+	testCurrency1          Currency = &testCurrency{"Bar", "FOO", "BAR", "|", "|", 1, 1, 2, true}
+	testCurrencyCollision1 Currency = &testCurrency{"Bar", "FOZ", "BAR", "‖", "‖", 2, 2, 2, true} // Collides with testCurrency1 on its code.
+	testCurrencyCollision2 Currency = &testCurrency{"Bar", "FOO", "BAR", "⫼", "⫼", 3, 3, 2, true} // Collides with testCurrency1 on its code and unique code.
+	testCurrencyCollision3 Currency = &testCurrency{"Baz", "FOZ", "BAZ", "⟊", "⟊", 4, 1, 2, true} // Collides with testCurrency1 on its unique ID.
+	testCurrencyCollision4 Currency = &testCurrency{"Baz", "FOZ", "BAZ", "˥", "˥", 1, 5, 2, true} // Collides with testCurrency1 on its numeric code.
+
+	testCurrencyIllegal1 Currency = &testCurrency{"Bar", "FOO", "BAR", "|", "|", 1, 0, 2, true}  // Variant of testCurrency1 that contains an illegal unique ID.
+	testCurrencyIllegal2 Currency = &testCurrency{"Bar", "FOO", "Bar", "|", "|", 1, 1, 2, true}  // Variant of testCurrency1 that contains an illegal code.
+	testCurrencyIllegal3 Currency = &testCurrency{"Bar", "Foo", "BAR", "|", "|", 1, 1, 2, true}  // Variant of testCurrency1 that contains an illegal standard string.
+	testCurrencyIllegal4 Currency = &testCurrency{"Bar", "FOO", "BAR", "|", "|", 1, 1, -1, true} // Variant of testCurrency1 that contains an illegal DecimalPlaces output.
+	testCurrencyIllegal5 Currency = &testCurrency{"Bar", "FOO", "BAR", "|", "|", 1, 1, 2, false} // Variant of testCurrency1 that contains an illegal DecimalPlaces output.
+	testCurrencyIllegal6 Currency = &testCurrency{"Bar", "FOO", "BAR", "|", "", 1, 1, 2, true}   // Variant of testCurrency1 that contains an illegal symbol combination.
+	testCurrencyIllegal7 Currency = &testCurrency{"Bar", "FOO", "BAR", "", "|", 1, 1, 2, true}   // Variant of testCurrency1 that contains an illegal symbol combination.
 )
 
-func TestFooBarCurrency(t *testing.T) {
-	for _, currency := range []Currency{testCurrency1, testCurrencyCollision1, testCurrencyCollision2, testCurrencyCollision3} {
+func TestFooBarCurrencies(t *testing.T) {
+	currencies := []Currency{
+		testCurrency1,
+		testCurrencyCollision1,
+		testCurrencyCollision2,
+		testCurrencyCollision3,
+		testCurrencyCollision4,
+	}
+
+	for _, currency := range currencies {
 		if err := ValidateCurrency(currency); err != nil {
-			t.Errorf("Failed to validate currency %q: %v", currency, err)
+			t.Errorf("ValidateCurrency() failed to validate currency %q: %v", currency, err)
+		}
+	}
+}
+
+func TestValidateCurrency(t *testing.T) {
+	currencies := []Currency{
+		testCurrencyIllegal1,
+		testCurrencyIllegal2,
+		testCurrencyIllegal3,
+		testCurrencyIllegal4,
+		testCurrencyIllegal5,
+		testCurrencyIllegal6,
+		testCurrencyIllegal7,
+	}
+
+	for _, currency := range currencies {
+		if err := ValidateCurrency(currency); err == nil {
+			t.Errorf("ValidateCurrency() failed to validate currency %q. Expected error", currency)
 		}
 	}
 }
