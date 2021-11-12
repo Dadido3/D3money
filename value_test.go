@@ -12,23 +12,35 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-// fooBarCurrency implements a custom currency for testing purposes.
-type fooBarCurrency struct{}
+// testCurrency implements a custom currency for testing purposes.
+type testCurrency struct {
+	name, standard, code, symbol, shortSymbol string
+	uniqueID                                  int32
+	decimalPlaces                             int
+	hasSmallestUnit                           bool
+}
 
-func (c *fooBarCurrency) Name() string               { return "Bar" }
-func (c *fooBarCurrency) StandardName() string       { return "FOO" }
-func (c *fooBarCurrency) UniqueID() int32            { return -1 }
-func (c *fooBarCurrency) UniqueCode() string         { return "FOO-BAR" }
-func (c *fooBarCurrency) Code() string               { return "BAR" }
-func (c *fooBarCurrency) Symbol() string             { return "❚" }
-func (c *fooBarCurrency) ShortSymbol() string        { return "❚" }
-func (c *fooBarCurrency) DecimalPlaces() (int, bool) { return 2, true }
+func (c *testCurrency) Name() string               { return c.code }
+func (c *testCurrency) StandardName() string       { return c.standard }
+func (c *testCurrency) UniqueID() int32            { return c.uniqueID }
+func (c *testCurrency) UniqueCode() string         { return c.StandardName() + "-" + c.Code() }
+func (c *testCurrency) Code() string               { return c.code }
+func (c *testCurrency) Symbol() string             { return c.symbol }
+func (c *testCurrency) ShortSymbol() string        { return c.shortSymbol }
+func (c *testCurrency) DecimalPlaces() (int, bool) { return c.decimalPlaces, c.hasSmallestUnit }
 
-var FooBarCurrency Currency = new(fooBarCurrency)
+var (
+	testCurrency1          Currency = &testCurrency{"Bar", "FOO", "BAR", "|", "|", 1, 2, true}
+	testCurrencyCollision1 Currency = &testCurrency{"Bar", "FOZ", "BAR", "‖", "‖", 2, 2, true} // Collides with testCurrency1 on its code.
+	testCurrencyCollision2 Currency = &testCurrency{"Bar", "FOO", "BAR", "⫼", "⫼", 3, 2, true} // Collides with testCurrency1 on its code and unique code.
+	testCurrencyCollision3 Currency = &testCurrency{"Baz", "FOZ", "BAZ", "⟊", "⟊", 1, 2, true} // Collides with testCurrency1 on its unique ID.
+)
 
 func TestFooBarCurrency(t *testing.T) {
-	if err := ValidateCurrency(FooBarCurrency); err != nil {
-		t.Errorf("Failed to validate currency %q: %v", FooBarCurrency, err)
+	for _, currency := range []Currency{testCurrency1, testCurrencyCollision1, testCurrencyCollision2, testCurrencyCollision3} {
+		if err := ValidateCurrency(currency); err != nil {
+			t.Errorf("Failed to validate currency %q: %v", currency, err)
+		}
 	}
 }
 
@@ -78,9 +90,9 @@ func TestFromStringAndCurrency(t *testing.T) {
 		{"4", args{"-10000.123 ISO4217-EUR", ISO4217Currencies.ByCode("EUR")}, Value{decimal.New(-10000123, -3), ISO4217Currencies.ByCode("EUR")}, false},
 		{"5", args{"-10000.123 ISO4217-USD", ISO4217Currencies.ByCode("EUR")}, Value{decimal.Decimal{}, nil}, true},
 		{"6", args{"-10000.123 FOO-BAR", nil}, Value{decimal.Decimal{}, nil}, true},
-		{"7", args{"-10000.123", FooBarCurrency}, Value{decimal.New(-10000123, -3), FooBarCurrency}, false},
-		{"8", args{"-10000.123 FOO-BAR", FooBarCurrency}, Value{decimal.New(-10000123, -3), FooBarCurrency}, false},
-		{"9", args{"-10000.123 ISO4217-EUR", FooBarCurrency}, Value{decimal.Decimal{}, nil}, true},
+		{"7", args{"-10000.123", testCurrency1}, Value{decimal.New(-10000123, -3), testCurrency1}, false},
+		{"8", args{"-10000.123 FOO-BAR", testCurrency1}, Value{decimal.New(-10000123, -3), testCurrency1}, false},
+		{"9", args{"-10000.123 ISO4217-EUR", testCurrency1}, Value{decimal.Decimal{}, nil}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

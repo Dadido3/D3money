@@ -297,4 +297,4 @@ var iso4217Currencies = []Currency{
 }
 
 // ISO4217Currencies currencies according to ISO 4217.
-var ISO4217Currencies = MustNewCurrencyCollection(iso4217Name, iso4217Currencies)
+var ISO4217Currencies = MustNewCurrencyCollection(iso4217Name, true, iso4217Currencies)

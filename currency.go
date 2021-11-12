@@ -24,7 +24,7 @@ type Currency interface {
 	DecimalPlaces() (decimalPlaces int, hasSmallestUnit bool) // DecimalPlaces returns the number of decimal places that represents the "Minor unit". If the resulting number is 0, this currency can't be divided any further. If the resulting bool is false and/or if the number of decimal places is -1, there is no smallest unit.
 }
 
-var regexFindNonAlphaNumeric = regexp.MustCompile("[^a-zA-Z0-9]")
+var regexFindNonAlphaNumeric = regexp.MustCompile("[^A-Z0-9]")
 
 // ValidateCurrency checks if the given currency contains illegal characters and such things.
 func ValidateCurrency(c Currency) error {
