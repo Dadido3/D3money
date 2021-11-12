@@ -15,7 +15,7 @@ import (
 // If the currency is different between the values, the result will always be false and an error will be returned.
 func (v Value) Equal(comp Value) (bool, error) {
 	if v.currency != comp.currency {
-		return false, fmt.Errorf("monetary values have different currencies %q and %q", v.currency, comp.currency)
+		return false, &ErrorDifferentCurrencies{v.currency, comp.currency}
 	}
 	return v.value.Equal(comp.value), nil
 }
@@ -24,7 +24,7 @@ func (v Value) Equal(comp Value) (bool, error) {
 // If the currency is different between the values, the result will always be false and an error will be returned.
 func (v Value) GreaterThan(comp Value) (bool, error) {
 	if v.currency != comp.currency {
-		return false, fmt.Errorf("can't compare values of different currencies")
+		return false, &ErrorDifferentCurrencies{v.currency, comp.currency}
 	}
 	return v.value.GreaterThan(comp.value), nil
 }
@@ -33,7 +33,7 @@ func (v Value) GreaterThan(comp Value) (bool, error) {
 // If the currency is different between the values, the result will always be false and an error will be returned.
 func (v Value) GreaterThanOrEqual(comp Value) (bool, error) {
 	if v.currency != comp.currency {
-		return false, fmt.Errorf("can't compare values of different currencies")
+		return false, &ErrorDifferentCurrencies{v.currency, comp.currency}
 	}
 	return v.value.GreaterThanOrEqual(comp.value), nil
 }
@@ -42,7 +42,7 @@ func (v Value) GreaterThanOrEqual(comp Value) (bool, error) {
 // If the currency is different between the values, the result will always be false and an error will be returned.
 func (v Value) LessThan(comp Value) (bool, error) {
 	if v.currency != comp.currency {
-		return false, fmt.Errorf("can't compare values of different currencies")
+		return false, &ErrorDifferentCurrencies{v.currency, comp.currency}
 	}
 	return v.value.LessThan(comp.value), nil
 }
@@ -51,7 +51,7 @@ func (v Value) LessThan(comp Value) (bool, error) {
 // If the currency is different between the values, the result will always be false and an error will be returned.
 func (v Value) LessThanOrEqual(comp Value) (bool, error) {
 	if v.currency != comp.currency {
-		return false, fmt.Errorf("can't compare values of different currencies")
+		return false, &ErrorDifferentCurrencies{v.currency, comp.currency}
 	}
 	return v.value.LessThanOrEqual(comp.value), nil
 }
@@ -78,7 +78,7 @@ func (v Value) InexactFloat64() float64 {
 // In case the two values don't use the same currency, this will return an error.
 func (v Value) Add(v2 Value) (Value, error) {
 	if v.currency != v2.currency {
-		return Value{}, fmt.Errorf("can't add two values with different currencies %q and %q", v.currency, v2.currency)
+		return Value{}, &ErrorDifferentCurrencies{v.currency, v2.currency}
 	}
 
 	return Value{value: v.value.Add(v2.value), currency: v.currency}, nil
@@ -103,7 +103,7 @@ func (v Value) MustAdd(v2 Value) Value {
 // In case the two values don't use the same currency, this will return an error.
 func (v Value) Sub(v2 Value) (Value, error) {
 	if v.currency != v2.currency {
-		return Value{}, fmt.Errorf("can't subtract two values with different currencies %q and %q", v.currency, v2.currency)
+		return Value{}, &ErrorDifferentCurrencies{v.currency, v2.currency}
 	}
 
 	return Value{value: v.value.Sub(v2.value), currency: v.currency}, nil
@@ -130,7 +130,7 @@ func (v Value) Mul(v2 Value) (Value, error) {
 	var currency Currency
 
 	if v.currency != nil && v2.currency != nil {
-		return Value{}, fmt.Errorf("can't multiply the two values with currencies %q and %q", v.currency, v2.currency)
+		return Value{}, fmt.Errorf("can't multiply two values with currencies %q and %q", v.currency, v2.currency)
 	} else if v.currency != nil {
 		currency = v.currency
 	} else if v2.currency != nil {

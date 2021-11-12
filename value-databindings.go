@@ -47,7 +47,7 @@ func (v *Value) UnmarshalJSON(data []byte) error {
 	var cur Currency
 	if d.Currency != "" {
 		if cur = Currencies.ByUniqueCode(d.Currency); cur == nil {
-			return fmt.Errorf("can't find currency with unique code %q", d.Currency)
+			return &ErrorCantFindUniqueCode{d.Currency}
 		}
 	}
 
@@ -82,7 +82,7 @@ func (v *Value) UnmarshalBinary(data []byte) error {
 	} else {
 		cur := Currencies.ByUniqueID(uniqueID)
 		if cur == nil {
-			return fmt.Errorf("can't find currency with unique ID %d", uniqueID)
+			return &ErrorCantFindUniqueID{uniqueID}
 		}
 		v.currency = cur
 	}

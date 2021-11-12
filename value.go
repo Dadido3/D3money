@@ -181,7 +181,7 @@ func parse(str string, cc CurrencyCollection, additionalCurrency Currency) (deci
 
 		// If there is still no match, return error.
 		if matchedCurrency == nil {
-			return decimal.Zero, nil, fmt.Errorf("unknown unique currency code %q", curStr)
+			return decimal.Zero, nil, &ErrorCantFindUniqueCode{curStr}
 		}
 
 	default:

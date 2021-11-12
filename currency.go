@@ -32,36 +32,36 @@ func ValidateCurrency(c Currency) error {
 
 	// No currency should have an unique ID of 0.
 	if c.UniqueID() == 0 {
-		return fmt.Errorf("unique ID is 0. This value is reserved for \"no currency\"")
+		return &ErrorInvalidCurrency{"unique ID is 0. This value is reserved for \"no currency\""}
 	}
 
 	// The code should only contain alphanumeric characters.
 	if regexFindNonAlphaNumeric.MatchString(code) {
 		firstMatch := regexFindNonAlphaNumeric.FindString(code)
-		return fmt.Errorf("result of Code() contains illegal character(s) %q", firstMatch)
+		return &ErrorInvalidCurrency{fmt.Sprintf("result of Code() contains illegal character(s) %q", firstMatch)}
 	}
 
 	// The standard name should only contain alphanumeric characters.
 	if regexFindNonAlphaNumeric.MatchString(standard) {
 		firstMatch := regexFindNonAlphaNumeric.FindString(standard)
-		return fmt.Errorf("result of Standard() contains illegal character(s) %q", firstMatch)
+		return &ErrorInvalidCurrency{fmt.Sprintf("result of Standard() contains illegal character(s) %q", firstMatch)}
 	}
 
 	// Check if the unique code is in the following form: "Standard-Code".
 	if fmt.Sprintf("%s-%s", standard, code) != uniqueCode {
-		return fmt.Errorf("unique name %q is not of the form \"Standard-Code\". Expected \"%s-%s\"", uniqueCode, standard, code)
+		return &ErrorInvalidCurrency{fmt.Sprintf("unique name %q is not of the form \"Standard-Code\". Expected \"%s-%s\"", uniqueCode, standard, code)}
 	}
 
 	// Check for illegal result of DecimalPlaces().
 	if decimalPlaces, hasSmallestUnit := c.DecimalPlaces(); hasSmallestUnit {
 		// Has smallest unit.
 		if decimalPlaces < 0 {
-			return fmt.Errorf("currency has smallest unit, but %d decimal places", decimalPlaces)
+			return &ErrorInvalidCurrency{fmt.Sprintf("currency has smallest unit, but %d decimal places", decimalPlaces)}
 		}
 	} else {
 		// Has no smallest unit.
 		if decimalPlaces != -1 {
-			return fmt.Errorf("currency has no smallest unit, but %d decimal places. Expects %d decimal places", decimalPlaces, -1)
+			return &ErrorInvalidCurrency{fmt.Sprintf("currency has no smallest unit, but %d decimal places. Expects %d decimal places", decimalPlaces, -1)}
 		}
 	}
 
@@ -72,7 +72,7 @@ func ValidateCurrency(c Currency) error {
 	// Illegal: "" and "$"
 	// Illegal: "US$" and ""
 	if narrowSymbol != symbol && (narrowSymbol == "" || symbol == "") {
-		return fmt.Errorf("symbol is %q and narrow symbol is %q. Both need to be the same, or both need to be non empty strings", symbol, narrowSymbol)
+		return &ErrorInvalidCurrency{fmt.Sprintf("symbol is %q and narrow symbol is %q. Both need to be the same, or both need to be non empty strings", symbol, narrowSymbol)}
 	}
 
 	return nil
