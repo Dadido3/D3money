@@ -12,63 +12,63 @@ import (
 )
 
 // Equal returns if a monetary value is equal to another.
-// If the currency is different between the values, the result will always be false and an error will be returned.
+// If the currency differs between the two values, the result is always false and an error is returned.
 func (v Value) Equal(comp Value) (bool, error) {
 	if v.currency != comp.currency {
 		return false, &ErrorDifferentCurrencies{v.currency, comp.currency}
 	}
-	return v.value.Equal(comp.value), nil
+	return v.amount.Equal(comp.amount), nil
 }
 
 // GreaterThan returns if the monetary value is greater than another value.
-// If the currency is different between the values, the result will always be false and an error will be returned.
+// If the currency differs between the two values, the result is always false and an error is returned.
 func (v Value) GreaterThan(comp Value) (bool, error) {
 	if v.currency != comp.currency {
 		return false, &ErrorDifferentCurrencies{v.currency, comp.currency}
 	}
-	return v.value.GreaterThan(comp.value), nil
+	return v.amount.GreaterThan(comp.amount), nil
 }
 
 // GreaterThanOrEqual returns if the monetary value is greater than or equal to another value.
-// If the currency is different between the values, the result will always be false and an error will be returned.
+// If the currency differs between the two values, the result is always false and an error is returned.
 func (v Value) GreaterThanOrEqual(comp Value) (bool, error) {
 	if v.currency != comp.currency {
 		return false, &ErrorDifferentCurrencies{v.currency, comp.currency}
 	}
-	return v.value.GreaterThanOrEqual(comp.value), nil
+	return v.amount.GreaterThanOrEqual(comp.amount), nil
 }
 
 // LessThan returns if the monetary value is less than another value.
-// If the currency is different between the values, the result will always be false and an error will be returned.
+// If the currency differs between the two values, the result is always false and an error is returned.
 func (v Value) LessThan(comp Value) (bool, error) {
 	if v.currency != comp.currency {
 		return false, &ErrorDifferentCurrencies{v.currency, comp.currency}
 	}
-	return v.value.LessThan(comp.value), nil
+	return v.amount.LessThan(comp.amount), nil
 }
 
 // LessThanOrEqual returns if the monetary value is less than or equal to another value.
-// If the currency is different between the values, the result will always be false and an error will be returned.
+// If the currency differs between the two values, the result is always false and an error is returned.
 func (v Value) LessThanOrEqual(comp Value) (bool, error) {
 	if v.currency != comp.currency {
 		return false, &ErrorDifferentCurrencies{v.currency, comp.currency}
 	}
-	return v.value.LessThanOrEqual(comp.value), nil
+	return v.amount.LessThanOrEqual(comp.amount), nil
 }
 
 // Decimal returns the value as a shopspring/decimal number.
 func (v Value) Decimal() decimal.Decimal {
-	return v.value
+	return v.amount
 }
 
 // Float64 returns the nearest float64 for the value v, and a bool indicating if the float represents the value exactly.
 func (v Value) Float64() (f float64, exact bool) {
-	return v.value.Float64()
+	return v.amount.Float64()
 }
 
 // InexactFloat64 returns the nearest float64 for the value v.
 func (v Value) InexactFloat64() float64 {
-	f, _ := v.value.Float64()
+	f, _ := v.amount.Float64()
 	return f
 }
 
@@ -81,7 +81,7 @@ func (v Value) Add(v2 Value) (Value, error) {
 		return Value{}, &ErrorDifferentCurrencies{v.currency, v2.currency}
 	}
 
-	return Value{value: v.value.Add(v2.value), currency: v.currency}, nil
+	return Value{amount: v.amount.Add(v2.amount), currency: v.currency}, nil
 }
 
 // MustAdd returns v + v2 as a new value.
@@ -106,7 +106,7 @@ func (v Value) Sub(v2 Value) (Value, error) {
 		return Value{}, &ErrorDifferentCurrencies{v.currency, v2.currency}
 	}
 
-	return Value{value: v.value.Sub(v2.value), currency: v.currency}, nil
+	return Value{amount: v.amount.Sub(v2.amount), currency: v.currency}, nil
 }
 
 // MustSub returns v - v2 as a new value.
@@ -137,7 +137,7 @@ func (v Value) Mul(v2 Value) (Value, error) {
 		currency = v2.currency
 	}
 
-	return Value{value: v.value.Mul(v2.value), currency: currency}, nil
+	return Value{amount: v.amount.Mul(v2.amount), currency: currency}, nil
 }
 
 // MustMul returns v * v2 as a new value.
@@ -157,7 +157,7 @@ func (v Value) MustMul(v2 Value) Value {
 //	Abs(FromString("-123.456 ISO4217-EUR")) // Returns "123.456 ISO4217-EUR"
 //	Abs(FromString("123.456 ISO4217-EUR"))  // Returns "123.456 ISO4217-EUR"
 func (v Value) Abs() Value {
-	return Value{value: v.value.Abs(), currency: v.currency}
+	return Value{amount: v.amount.Abs(), currency: v.currency}
 }
 
 // Neg returns the negative value.
@@ -165,7 +165,7 @@ func (v Value) Abs() Value {
 //	Neg(FromString("-123.456 ISO4217-EUR")) // Returns "123.456 ISO4217-EUR"
 //	Neg(FromString("123.456 ISO4217-EUR"))  // Returns "-123.456 ISO4217-EUR"
 func (v Value) Neg() Value {
-	return Value{value: v.value.Neg(), currency: v.currency}
+	return Value{amount: v.amount.Neg(), currency: v.currency}
 }
 
 // Sign returns:
@@ -176,7 +176,7 @@ func (v Value) Neg() Value {
 //
 // The currency is ignored.
 func (v Value) Sign() int {
-	return v.value.Sign()
+	return v.amount.Sign()
 }
 
 // IsPositive returns true when the value is greater than zero, false otherwise.

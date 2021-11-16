@@ -19,10 +19,10 @@ import (
 // MarshalJSON returns the marshaled representation of the object.
 func (v Value) MarshalJSON() ([]byte, error) {
 	d := struct {
-		Value    decimal.Decimal
+		Amount   decimal.Decimal
 		Currency string `json:",omitempty"`
 	}{
-		Value: v.value,
+		Amount: v.amount,
 	}
 
 	if v.currency != nil {
@@ -36,7 +36,7 @@ func (v Value) MarshalJSON() ([]byte, error) {
 // This will not be called if the JSON field of this value doesn't exist, therefore old data may persist after unmarshalling.
 func (v *Value) UnmarshalJSON(data []byte) error {
 	d := struct {
-		Value    decimal.Decimal
+		Amount   decimal.Decimal
 		Currency string `json:",omitempty"`
 	}{}
 
@@ -51,7 +51,7 @@ func (v *Value) UnmarshalJSON(data []byte) error {
 		}
 	}
 
-	v.value, v.currency = d.Value, cur
+	v.amount, v.currency = d.Amount, cur
 
 	return nil
 }
@@ -63,7 +63,7 @@ func (v Value) MarshalBinary() ([]byte, error) {
 		binary.BigEndian.PutUint32(data1, uint32(v.currency.UniqueID()))
 	}
 
-	data2, err := v.value.MarshalBinary()
+	data2, err := v.amount.MarshalBinary()
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +87,7 @@ func (v *Value) UnmarshalBinary(data []byte) error {
 		v.currency = cur
 	}
 
-	return v.value.UnmarshalBinary(data[4:])
+	return v.amount.UnmarshalBinary(data[4:])
 }
 
 // MarshalText implements the encoding.TextMarshaler interface.
@@ -97,12 +97,12 @@ func (v Value) MarshalText() ([]byte, error) {
 
 // UnmarshalText implements the encoding.TextUnmarshaler interface.
 func (v *Value) UnmarshalText(text []byte) error {
-	val, cur, err := parse(string(text), Currencies, nil)
+	amount, cur, err := parse(string(text), Currencies, nil)
 	if err != nil {
 		return fmt.Errorf("failed to parse text %q: %w", string(text), err)
 	}
 
-	v.value, v.currency = val, cur
+	v.amount, v.currency = amount, cur
 	return nil
 }
 
@@ -128,12 +128,12 @@ func (v *Value) Scan(value interface{}) error {
 		return fmt.Errorf("incompatible type %T, expected %T", value, str)
 	}
 
-	val, newCur, err := parse(str, Currencies, nil)
+	amount, newCur, err := parse(str, Currencies, nil)
 	if err != nil {
 		return fmt.Errorf("failed to parse string %q: %w", str, err)
 	}
 
-	v.value, v.currency = val, newCur
+	v.amount, v.currency = amount, newCur
 
 	return nil
 }

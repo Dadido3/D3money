@@ -27,13 +27,13 @@ func TestJSONMarshalling(t *testing.T) {
 	}
 
 	expectedMarshalledValues := [][]byte{
-		[]byte(`{"Value":"0"}`),
-		[]byte(`{"Value":"0","Currency":"ISO4217-EUR"}`),
-		[]byte(`{"Value":"-12345.6789"}`),
-		[]byte(`{"Value":"-12345.6789","Currency":"ISO4217-EUR"}`),
-		[]byte(`{"Value":"12345.6789"}`),
-		[]byte(`{"Value":"12345.6789","Currency":"ISO4217-USD"}`),
-		[]byte(`{"Value":"3.1415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253421170679","Currency":"ISO4217-XXX"}`),
+		[]byte(`{"Amount":"0"}`),
+		[]byte(`{"Amount":"0","Currency":"ISO4217-EUR"}`),
+		[]byte(`{"Amount":"-12345.6789"}`),
+		[]byte(`{"Amount":"-12345.6789","Currency":"ISO4217-EUR"}`),
+		[]byte(`{"Amount":"12345.6789"}`),
+		[]byte(`{"Amount":"12345.6789","Currency":"ISO4217-USD"}`),
+		[]byte(`{"Amount":"3.1415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253421170679","Currency":"ISO4217-XXX"}`),
 	}
 
 	// Marshall values.
