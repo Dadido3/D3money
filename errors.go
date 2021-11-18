@@ -26,7 +26,7 @@ func (e *ErrorInvalidCurrency) Error() string { return e.msg }
 type ErrorDifferentCurrencies struct{ c1, c2 Currency }
 
 func (e *ErrorDifferentCurrencies) Error() string {
-	return fmt.Sprintf("the monetary values have two different currencies: %s and %s", helperCurrencyUniqueCode(e.c1), helperCurrencyUniqueCode(e.c2))
+	return fmt.Sprintf("currencies %s and %s don't match", helperCurrencyUniqueCode(e.c1), helperCurrencyUniqueCode(e.c2))
 }
 
 // ErrorCantFindUniqueID is returned when no currency can be found for a given unique ID.

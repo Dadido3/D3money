@@ -198,12 +198,69 @@ func (v Value) IsZero() bool {
 	return v.Sign() == 0
 }
 
+// SplitWithSmallestUnit returns the value of v split into a list of n values.
+// If the value can't be split evenly, the remainder will be distributed round-robin amongst the parts.
+// The resulting values will always be multiple of smallestUnit, if that's not possible an error will be returned.
+//
+//	MustFromString("-11.11").SplitWithSmallestUnit(3, MustFromString("0.01"))                         // Returns the three values `-3.71`, `-3.7`, `-3.7`.
+//	MustFromString("-11.11 ISO4217-EUR").SplitWithSmallestUnit(3, MustFromString("0.01 ISO4217-EUR")) // Returns the three EUR values `-3.71`, `-3.7`, `-3.7`.
+//	MustFromString("-11.11").SplitWithSmallestUnit(3, MustFromString("0.1"))                          // Returns an error, as the value can't be split into parts that are multiple of the smallest unit (0.1).
+func (v Value) SplitWithSmallestUnit(n int, smallestUnit Value) ([]Value, error) {
+	if n <= 0 {
+		return nil, fmt.Errorf("number of parts must not be negative")
+	}
+	if smallestUnit.Sign() <= 0 {
+		return nil, fmt.Errorf("smallest unit with %s is outside the allowed range", smallestUnit)
+	}
+	if smallestUnit.currency != v.currency {
+		return nil, &ErrorDifferentCurrencies{v.currency, smallestUnit.currency}
+	}
+
+	// Negate smallest unit if the value is negative.
+	// This way we will always have positive amounts of smallest units.
+	smallestUnitSigned := smallestUnit.Decimal()
+	if v.IsNegative() {
+		smallestUnitSigned = smallestUnitSigned.Neg()
+	}
+
+	// Get amount of smallest units that have to be distributed.
+	q, r := v.amount.QuoRem(smallestUnitSigned, 0)
+	if !r.IsZero() {
+		return nil, fmt.Errorf("value is not a multiple of the smallest unit %s", smallestUnit)
+	}
+
+	// Get amount of smallest units per part.
+	qPart, rPart := q.QuoRem(decimal.NewFromInt(int64(n)), 0)
+	if !rPart.IsInteger() {
+		// This shouldn't happen, n and q are supposed to be integers.
+		panic("The remainder must be an integer")
+	}
+	// The first largerParts number of result values contain one more smallest unit.
+	// largerParts can't be larger than n, which is an int.
+	largerParts := int(rPart.IntPart())
+
+	value1 := Value{amount: qPart.Mul(smallestUnitSigned), currency: v.currency}
+	value2 := Value{amount: value1.amount.Add(smallestUnitSigned), currency: v.currency}
+
+	// Build list of values.
+	values := make([]Value, n)
+	for i := range values {
+		if i >= largerParts {
+			values[i] = value1 // qPart * smallestUnit
+		} else {
+			values[i] = value2 // qPart * smallestUnit + smallestUnit
+		}
+	}
+
+	return values, nil
+}
+
 // SplitWithDecimals returns the value of v split into a list of n values.
 // If the value can't be split evenly, the remainder will be distributed round-robin amongst the parts.
 // The smallest unit that the value is split into is calculated by 10^(-decimalPlaces).
 //
-//	MustFromString("-11.11 ISO4217-EUR").Split(3, 2) // Returns the three EUR values `-3.71`, `-3.7`, `-3.7`.
-//	MustFromString("-11.11 ISO4217-EUR").Split(3, 1) // Returns an error, as the value can't be split into parts that are multiple of the smallest unit (0.1).
+//	MustFromString("-11.11 ISO4217-EUR").SplitWithDecimals(3, 2) // Returns the three EUR values `-3.71`, `-3.7`, `-3.7`.
+//	MustFromString("-11.11 ISO4217-EUR").SplitWithDecimals(3, 1) // Returns an error, as the value can't be split into parts that are multiple of the smallest unit (0.1).
 func (v Value) SplitWithDecimals(n int, decimalPlaces int) ([]Value, error) {
 	if n <= 0 {
 		return nil, fmt.Errorf("number of parts must not be negative")

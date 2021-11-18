@@ -433,6 +433,56 @@ func TestValue_IsZero(t *testing.T) {
 	}
 }
 
+func TestValue_SplitWithSmallestUnit(t *testing.T) {
+	type args struct {
+		n            int
+		smallestUnit Value
+	}
+	tests := []struct {
+		name    string
+		v       Value
+		args    args
+		want    []Value
+		wantErr bool
+	}{
+		{"comment_1", MustFromString("-11.11"), args{3, MustFromString("0.01")}, []Value{MustFromString("-3.71"), MustFromString("-3.7"), MustFromString("-3.7")}, false},
+		{"comment_2", MustFromString("-11.11 ISO4217-EUR"), args{3, MustFromString("0.1 ISO4217-EUR")}, []Value{}, true},
+		{"comment_3", MustFromString("-11.11"), args{3, MustFromString("0.1")}, []Value{}, true},
+		{"1_1", MustFromString("1"), args{1, MustFromString("0.01")}, []Value{MustFromString("1")}, false},
+		{"1_2", MustFromString("1"), args{2, MustFromString("0.01")}, []Value{MustFromString("0.5"), MustFromString("0.5")}, false},
+		{"1_3", MustFromString("1"), args{3, MustFromString("0.01")}, []Value{MustFromString("0.34"), MustFromString("0.33"), MustFromString("0.33")}, false},
+		{"1_3_e", MustFromString("1"), args{3, MustFromString("0.03")}, []Value{}, true},
+		{"-1_1", MustFromString("-1"), args{1, MustFromString("0.01")}, []Value{MustFromString("-1")}, false},
+		{"-1_2", MustFromString("-1"), args{2, MustFromString("0.01")}, []Value{MustFromString("-0.5"), MustFromString("-0.5")}, false},
+		{"-1_3", MustFromString("-1"), args{3, MustFromString("0.01")}, []Value{MustFromString("-0.34"), MustFromString("-0.33"), MustFromString("-0.33")}, false},
+		{"3_1", MustFromString("3"), args{1, MustFromString("0.03")}, []Value{MustFromString("3")}, false},
+		{"3_2", MustFromString("3"), args{2, MustFromString("0.03")}, []Value{MustFromString("1.5"), MustFromString("1.5")}, false},
+		{"3_3", MustFromString("3"), args{3, MustFromString("0.03")}, []Value{MustFromString("1.02"), MustFromString("0.99"), MustFromString("0.99")}, false},
+		{"-3_1", MustFromString("-3"), args{1, MustFromString("0.03")}, []Value{MustFromString("-3")}, false},
+		{"-3_2", MustFromString("-3"), args{2, MustFromString("0.03")}, []Value{MustFromString("-1.5"), MustFromString("-1.5")}, false},
+		{"-3_3", MustFromString("-3"), args{3, MustFromString("0.03")}, []Value{MustFromString("-1.02"), MustFromString("-0.99"), MustFromString("-0.99")}, false},
+		{"e1", MustFromString("1"), args{0, MustFromString("0.01")}, []Value{}, true},
+		{"e2", MustFromString("1"), args{-1, MustFromString("0.01")}, []Value{}, true},
+		{"e3", MustFromString("1"), args{1, MustFromString("0.00")}, []Value{}, true},
+		{"e4", MustFromString("1"), args{1, MustFromString("-0.01")}, []Value{}, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := tt.v.SplitWithSmallestUnit(tt.args.n, tt.args.smallestUnit)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Value.SplitWithSmallestUnit() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			for i, part := range got {
+				if equal, _ := part.Equal(tt.want[i]); !equal {
+					t.Errorf("Value.SplitWithSmallestUnit() = %v, want %v", got, tt.want)
+					break
+				}
+			}
+		})
+	}
+}
+
 func TestValue_SplitWithDecimals(t *testing.T) {
 	type args struct {
 		n             int
