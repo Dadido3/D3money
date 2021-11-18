@@ -37,8 +37,7 @@ func FromString(str string) (Value, error) {
 }
 
 // MustFromString returns a value object from the given string.
-// No currency matching will be done, and no currency will be given.
-// If there is a currency code in the string, this function will return an error.
+// The string can contain a currency by its unique code.
 // This will not use any locale specific formatting, and is not suited for input from humans without any preprocessing.
 //
 // In case of an error, this will panic.
@@ -55,7 +54,7 @@ func MustFromString(str string) Value {
 
 // FromStringAndCurrency returns a value object from the given string.
 // The field cur can be used to define the currency.
-// The string can contain a currency by its unique code, but it's checked whether it matches with the field cur.
+// The string can contain a currency by its unique code, but if it does, it must match the currency in the field cur.
 // This will not use any locale specific formatting, and is not suited for input from humans without any preprocessing.
 //
 // Examples:
@@ -89,7 +88,7 @@ func FromStringAndCurrency(str string, cur Currency) (Value, error) {
 
 // MustFromStringAndCurrency returns a value object from the given string.
 // The field cur can be used to define the currency.
-// The string can contain a currency by its unique code, but it's checked whether it matches with the field cur.
+// The string can contain a currency by its unique code, but if it does, it must match the currency in the field cur.
 // This will not use any locale specific formatting, and is not suited for input from humans without any preprocessing.
 //
 // In case of an error, this will panic.
