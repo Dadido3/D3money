@@ -280,13 +280,10 @@ func (v Value) SplitWithDecimals(n int, decimalPlaces int) ([]Value, error) {
 //	MustFromString("-1111 ISO4217-VND").Split(3)  // Returns the three VND values `-371`, `-370`, `-370`.
 //	MustFromString("-11.11").Split(3)             // Returns an error, as there is no smallest unit.
 func (v Value) Split(n int) ([]Value, error) {
-	decimalPlaces, hasSmallestUnit := 0, false
+	var smallestUnit Value // Default value is a smallest unit of 0. Which means that there is no smallest unit.
 	if v.currency != nil {
-		decimalPlaces, hasSmallestUnit = v.currency.DecimalPlaces()
-	}
-	if !hasSmallestUnit {
-		return nil, fmt.Errorf("%s doesn't have a smallest unit", helperCurrencyUniqueCode(v.currency))
+		smallestUnit = v.currency.SmallestUnit()
 	}
 
-	return v.SplitWithDecimals(n, decimalPlaces)
+	return v.SplitWithSmallestUnit(n, smallestUnit)
 }

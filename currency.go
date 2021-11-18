@@ -22,7 +22,7 @@ type Currency interface {
 	Symbol() string       // Symbol returns a string containing the symbol of the currency. This may be ambiguous, and should only be used for formatting into a human readable format. This also doesn't follow any official standard. Examples: "US$", "AU$", "€", "₿"
 	NarrowSymbol() string // NarrowSymbol returns a string containing the narrow symbol variant of the currency. This may be ambiguous, and should only be used for formatting into a human readable format. This needs additional context when used in text output, otherwise there is no way to differentiate between AUD and USD for example. This also doesn't follow any official standard. Examples: "$", "$", "€", "₿".
 
-	DecimalPlaces() (decimalPlaces int, hasSmallestUnit bool) // DecimalPlaces returns the number of decimal places that represents the "Minor unit". If the resulting number is 0, this currency can't be divided any further. If the resulting bool is false and/or if the number of decimal places is -1, there is no smallest unit.
+	SmallestUnit() Value // SmallestUnit returns the value of the fractional unit. This can be any value, even one that is larger than 1. A value of 0 means that there is no smallest unit.
 }
 
 var regexFindNonAlphaNumeric = regexp.MustCompile("[^A-Z0-9]")
@@ -53,17 +53,11 @@ func ValidateCurrency(c Currency) error {
 		return &ErrorInvalidCurrency{fmt.Sprintf("unique code %q is not of the form \"Standard-Code\". Expected \"%s-%s\"", uniqueCode, standard, code)}
 	}
 
-	// Check for illegal result of DecimalPlaces().
-	if decimalPlaces, hasSmallestUnit := c.DecimalPlaces(); hasSmallestUnit {
-		// Has smallest unit.
-		if decimalPlaces < 0 {
-			return &ErrorInvalidCurrency{fmt.Sprintf("currency has smallest unit, but %d decimal places", decimalPlaces)}
-		}
-	} else {
-		// Has no smallest unit.
-		if decimalPlaces != -1 {
-			return &ErrorInvalidCurrency{fmt.Sprintf("currency has no smallest unit, but %d decimal places. Expects %d decimal places", decimalPlaces, -1)}
-		}
+	// Check for illegal SmallestUnit() results.
+	if smallestUnit := c.SmallestUnit(); smallestUnit.Currency() != c {
+		return &ErrorInvalidCurrency{fmt.Sprintf("smallest unit uses %s as currency", helperCurrencyUniqueCode(smallestUnit.Currency()))}
+	} else if smallestUnit.IsNegative() {
+		return &ErrorInvalidCurrency{fmt.Sprintf("smallest unit %q is negative", smallestUnit)}
 	}
 
 	// Symbol() and NarrowSymbol() should both return equal strings, or both need to be non empty strings.
