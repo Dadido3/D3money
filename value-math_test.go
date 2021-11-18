@@ -432,3 +432,100 @@ func TestValue_IsZero(t *testing.T) {
 		})
 	}
 }
+
+func TestValue_SplitWithDecimals(t *testing.T) {
+	type args struct {
+		n             int
+		decimalPlaces int
+	}
+	tests := []struct {
+		name    string
+		v       Value
+		args    args
+		want    []Value
+		wantErr bool
+	}{
+		{"comment_1", MustFromString("-11.11 ISO4217-EUR"), args{3, 2}, []Value{MustFromString("-3.71 ISO4217-EUR"), MustFromString("-3.7 ISO4217-EUR"), MustFromString("-3.7 ISO4217-EUR")}, false},
+		{"comment_2", MustFromString("-11.11 ISO4217-EUR"), args{3, 1}, []Value{}, true},
+		{"1c_1", MustFromString("1 ISO4217-EUR"), args{1, 2}, []Value{MustFromString("1 ISO4217-EUR")}, false},
+		{"1c_2", MustFromString("1 ISO4217-EUR"), args{2, 2}, []Value{MustFromString("0.5 ISO4217-EUR"), MustFromString("0.5 ISO4217-EUR")}, false},
+		{"1c_3", MustFromString("1 ISO4217-EUR"), args{3, 2}, []Value{MustFromString("0.34 ISO4217-EUR"), MustFromString("0.33 ISO4217-EUR"), MustFromString("0.33 ISO4217-EUR")}, false},
+		{"1_1", MustFromString("1"), args{1, 2}, []Value{MustFromString("1")}, false},
+		{"1_2", MustFromString("1"), args{2, 2}, []Value{MustFromString("0.5"), MustFromString("0.5")}, false},
+		{"1_3", MustFromString("1"), args{3, 2}, []Value{MustFromString("0.34"), MustFromString("0.33"), MustFromString("0.33")}, false},
+		{"-1_1", MustFromString("-1"), args{1, 2}, []Value{MustFromString("-1")}, false},
+		{"-1_2", MustFromString("-1"), args{2, 2}, []Value{MustFromString("-0.5"), MustFromString("-0.5")}, false},
+		{"-1_3", MustFromString("-1"), args{3, 2}, []Value{MustFromString("-0.34"), MustFromString("-0.33"), MustFromString("-0.33")}, false},
+		{"0_1", MustFromString("0"), args{1, 2}, []Value{MustFromString("0")}, false},
+		{"0_2", MustFromString("0"), args{2, 2}, []Value{MustFromString("0"), MustFromString("0")}, false},
+		{"0_3", MustFromString("0"), args{3, 2}, []Value{MustFromString("0"), MustFromString("0"), MustFromString("0")}, false},
+		{"0b_1", MustFromString("0"), args{1, -2}, []Value{MustFromString("0")}, false},
+		{"0b_2", MustFromString("0"), args{2, -2}, []Value{MustFromString("0"), MustFromString("0")}, false},
+		{"0b_3", MustFromString("0"), args{3, -2}, []Value{MustFromString("0"), MustFromString("0"), MustFromString("0")}, false},
+		{"2_1", MustFromString("2"), args{1, 2}, []Value{MustFromString("2")}, false},
+		{"2_2", MustFromString("2"), args{2, 2}, []Value{MustFromString("1"), MustFromString("1")}, false},
+		{"2_3", MustFromString("2"), args{3, 2}, []Value{MustFromString("0.67"), MustFromString("0.67"), MustFromString("0.66")}, false},
+		{"1.01_2", MustFromString("1.01"), args{2, 2}, []Value{MustFromString("0.51"), MustFromString("0.5")}, false},
+		{"-1.01_2", MustFromString("-1.01"), args{2, 2}, []Value{MustFromString("-0.51"), MustFromString("-0.5")}, false},
+		{"6_2", MustFromString("6"), args{2, 0}, []Value{MustFromString("3"), MustFromString("3")}, false},
+		{"6_3", MustFromString("6"), args{3, 0}, []Value{MustFromString("2"), MustFromString("2"), MustFromString("2")}, false},
+		{"6_4", MustFromString("6"), args{4, 0}, []Value{MustFromString("2"), MustFromString("2"), MustFromString("1"), MustFromString("1")}, false},
+		{"60_2", MustFromString("60"), args{2, -1}, []Value{MustFromString("30"), MustFromString("30")}, false},
+		{"60_3", MustFromString("60"), args{3, -1}, []Value{MustFromString("20"), MustFromString("20"), MustFromString("20")}, false},
+		{"60_4", MustFromString("60"), args{4, -1}, []Value{MustFromString("20"), MustFromString("20"), MustFromString("10"), MustFromString("10")}, false},
+		{"6.1_2_e", MustFromString("6.1"), args{2, 0}, []Value{}, true},
+		{"-6.1_2_e", MustFromString("-6.1"), args{2, 0}, []Value{}, true},
+		{"1.005_1_e", MustFromString("1.005"), args{1, 2}, []Value{}, true},
+		{"-1.005_1_e", MustFromString("-1.005"), args{1, 2}, []Value{}, true},
+		{"e1", MustFromString("1"), args{0, 0}, []Value{}, true},
+		{"e2", MustFromString("1"), args{-1, 0}, []Value{}, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := tt.v.SplitWithDecimals(tt.args.n, tt.args.decimalPlaces)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Value.SplitWithDecimals() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			for i, part := range got {
+				if equal, _ := part.Equal(tt.want[i]); !equal {
+					t.Errorf("Value.SplitWithDecimals() = %v, want %v", got, tt.want)
+					break
+				}
+			}
+		})
+	}
+}
+
+func TestValue_Split(t *testing.T) {
+	type args struct {
+		n int
+	}
+	tests := []struct {
+		name    string
+		v       Value
+		args    args
+		want    []Value
+		wantErr bool
+	}{
+		{"comment_1", MustFromString("-11.11 ISO4217-EUR"), args{3}, []Value{MustFromString("-3.71 ISO4217-EUR"), MustFromString("-3.7 ISO4217-EUR"), MustFromString("-3.7 ISO4217-EUR")}, false},
+		{"comment_2", MustFromString("-11.11 ISO4217-VND"), args{3}, []Value{}, true},
+		{"comment_3", MustFromString("-1111 ISO4217-VND"), args{3}, []Value{MustFromString("-371 ISO4217-VND"), MustFromString("-370 ISO4217-VND"), MustFromString("-370 ISO4217-VND")}, false},
+		{"comment_4", MustFromString("-11.11"), args{3}, []Value{}, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := tt.v.Split(tt.args.n)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Value.Split() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			for i, part := range got {
+				if equal, _ := part.Equal(tt.want[i]); !equal {
+					t.Errorf("Value.Split() = %v, want %v", got, tt.want)
+					break
+				}
+			}
+		})
+	}
+}

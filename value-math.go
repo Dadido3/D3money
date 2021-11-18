@@ -7,6 +7,7 @@ package money
 
 import (
 	"fmt"
+	"math"
 
 	"github.com/shopspring/decimal"
 )
@@ -154,16 +155,16 @@ func (v Value) MustMul(v2 Value) Value {
 
 // Abs returns the absolute value.
 //
-//	Abs(FromString("-123.456 ISO4217-EUR")) // Returns "123.456 ISO4217-EUR"
-//	Abs(FromString("123.456 ISO4217-EUR"))  // Returns "123.456 ISO4217-EUR"
+//	MustFromString("-123.456 ISO4217-EUR").Abs() // Returns "123.456 ISO4217-EUR"
+//	MustFromString("123.456 ISO4217-EUR").Abs()  // Returns "123.456 ISO4217-EUR"
 func (v Value) Abs() Value {
 	return Value{amount: v.amount.Abs(), currency: v.currency}
 }
 
 // Neg returns the negative value.
 //
-//	Neg(FromString("-123.456 ISO4217-EUR")) // Returns "123.456 ISO4217-EUR"
-//	Neg(FromString("123.456 ISO4217-EUR"))  // Returns "-123.456 ISO4217-EUR"
+//	MustFromString("-123.456 ISO4217-EUR").Neg() // Returns "123.456 ISO4217-EUR"
+//	MustFromString("123.456 ISO4217-EUR").Neg()  // Returns "-123.456 ISO4217-EUR"
 func (v Value) Neg() Value {
 	return Value{amount: v.amount.Neg(), currency: v.currency}
 }
@@ -195,4 +196,85 @@ func (v Value) IsNegative() bool {
 // The currency is ignored.
 func (v Value) IsZero() bool {
 	return v.Sign() == 0
+}
+
+// SplitWithDecimals returns the value of v split into a list of n values.
+// If the value can't be split evenly, the remainder will be distributed round-robin amongst the parts.
+// The smallest unit that the value is split into is calculated by 10^(-decimalPlaces).
+//
+//	MustFromString("-11.11 ISO4217-EUR").Split(3, 2) // Returns the three EUR values `-3.71`, `-3.7`, `-3.7`.
+//	MustFromString("-11.11 ISO4217-EUR").Split(3, 1) // Returns an error, as the value can't be split into parts that are multiple of the smallest unit (0.1).
+func (v Value) SplitWithDecimals(n int, decimalPlaces int) ([]Value, error) {
+	if n <= 0 {
+		return nil, fmt.Errorf("number of parts must not be negative")
+	}
+	if decimalPlaces <= math.MinInt32 || decimalPlaces > math.MaxInt32 { // Exclude the min value from valid range, as we want to invert the number.
+		return nil, fmt.Errorf("decimal places (%d) is outside the allowed range", decimalPlaces)
+	}
+
+	smallestUnit := decimal.New(1, -int32(decimalPlaces))
+
+	// Division with remainder.
+	q, r := v.amount.QuoRem(decimal.NewFromInt(int64(n)), int32(decimalPlaces))
+	parts := make([]decimal.Decimal, n)
+	for i := range parts {
+		parts[i] = q
+	}
+
+	// Distribute remainder.
+distLoop:
+	for {
+		for i := range parts {
+			switch r.Sign() {
+			case 0: // Got everything distributed.
+				break distLoop
+
+			case 1: // We need to add the smallest unit to the parts.
+				parts[i], r = parts[i].Add(smallestUnit), r.Sub(smallestUnit)
+				if r.Sign() == -1 {
+					// Remainder can't be distributed without some value less than smallest unit being left over.
+					return nil, fmt.Errorf("remainder can't be distributed amongst parts")
+				}
+
+			case -1: // We need to subtract the smallest unit from the parts.
+				parts[i], r = parts[i].Sub(smallestUnit), r.Add(smallestUnit)
+				if r.Sign() == 1 {
+					// Remainder can't be distributed without some value less than smallest unit being left over.
+					return nil, fmt.Errorf("remainder can't be distributed amongst parts")
+				}
+			}
+
+		}
+	}
+
+	// Create monetary values from parts.
+	values := make([]Value, 0, len(parts))
+	for _, part := range parts {
+		values = append(values, Value{
+			amount:   part,
+			currency: v.currency,
+		})
+	}
+
+	return values, nil
+}
+
+// Split returns the value of v split into a list of n values.
+// If the value can't be split evenly, the remainder will be distributed round-robin amongst the parts.
+// The smallest unit is determined by the currency of the given value.
+//
+//	MustFromString("-11.11 ISO4217-EUR").Split(3) // Returns the three EUR values `-3.71`, `-3.7`, `-3.7`.
+//	MustFromString("-11.11 ISO4217-VND").Split(3) // Returns an error, as the value can't be split into parts that are multiple of the smallest unit (1).
+//	MustFromString("-1111 ISO4217-VND").Split(3)  // Returns the three VND values `-371`, `-370`, `-370`.
+//	MustFromString("-11.11").Split(3)             // Returns an error, as there is no smallest unit.
+func (v Value) Split(n int) ([]Value, error) {
+	decimalPlaces, hasSmallestUnit := 0, false
+	if v.currency != nil {
+		decimalPlaces, hasSmallestUnit = v.currency.DecimalPlaces()
+	}
+	if !hasSmallestUnit {
+		return nil, fmt.Errorf("%s doesn't have a smallest unit", helperCurrencyUniqueCode(v.currency))
+	}
+
+	return v.SplitWithDecimals(n, decimalPlaces)
 }
