@@ -147,7 +147,7 @@ func (v Value) String() string {
 // This can parse the output of value.String() without loss of information.
 //
 // This will always return a currency if the input string contains an amount and currency pair that is correctly delimited, in any other case it will return nil as currency!
-func parse(str string, cc CurrencyCollection, additionalCurrency Currency) (decimal.Decimal, Currency, error) {
+func parse(str string, cc *CurrencyCollection, additionalCurrency Currency) (decimal.Decimal, Currency, error) {
 	var amountStr, curStr string
 	var matchedCurrency Currency
 

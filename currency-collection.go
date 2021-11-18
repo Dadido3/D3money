@@ -9,23 +9,14 @@ import (
 	"fmt"
 )
 
-// CurrencyCollection provides a common interface for different currency standards. E.g. ISO 4217 or Cryptocurrencies.
-type CurrencyCollection interface {
-	Name() string // Name returns the name of the currency collection.
-
-	All() []Currency                         // All returns the full list of currencies that are contained in this collection.
-	ByUniqueID(uniqueID int32) Currency      // ByUniqueID finds a currency by its unique ID (e.g. 42170978).
-	ByUniqueCode(uniqueCode string) Currency // ByUniqueCode finds a currency by its unique code (e.g. "ISO4217-EUR").
-	ByNumericCode(code int) Currency         // ByNumericCode finds a currency by its numeric code (e.g. 978). This may not yield a result, as the numeric code is not unique across currency standards. Best is to use it only in combination with a collection of a single standard, like ISO4217Currencies.
-	ByCode(code string) Currency             // ByCode finds a currency by its code (e.g. "EUR"). This may not yield a result, as the code is not unique across currency standards. Best is to use it only in combination with a collection of a single standard, like ISO4217Currencies.
-
-	Add(c ...Currency) error // Add adds one or more currencies to this collection.
-}
-
-// currencyCollectionSet implements CurrencyCollection.
-// It's basically a set of currencies.
-type currencyCollectionSet struct {
+// CurrencyCollection is a container for currencies.
+//
+type CurrencyCollection struct {
 	name string
+
+	// Name of the currency standard that this collection is limited to.
+	// If set != "", no other currency standard other than the defined one will be allowed.
+	currencyStandard string
 
 	all           []Currency
 	hasCurrency   map[Currency]struct{}
@@ -35,24 +26,23 @@ type currencyCollectionSet struct {
 	byCode        map[string]Currency
 }
 
-// Make sure this type implements the CurrencyCollection interface.
-var _ CurrencyCollection = (*currencyCollectionSet)(nil)
-
 // NewCurrencyCollection takes one or more lists of currencies and returns them as a collection.
 //
-// singleStandard defines whether the collection contains currencies of just a single standard.
-// If you combine multiple standards into a collection, set it to false.
-func NewCurrencyCollection(name string, singleStandard bool, listsOfCurrencies ...[]Currency) (CurrencyCollection, error) {
-	cc := &currencyCollectionSet{
-		name:          name,
-		hasCurrency:   map[Currency]struct{}{},
-		byUniqueID:    map[int32]Currency{},
-		byUniqueCode:  map[string]Currency{},
-		byNumericCode: nil,
-		byCode:        nil,
+// With currencyStandard you can limit the collection to only allow currencies of a specific standard.
+// Set it to "" if you want to allow multiple currency standards.
+func NewCurrencyCollection(name string, currencyStandard string, listsOfCurrencies ...[]Currency) (*CurrencyCollection, error) {
+	cc := &CurrencyCollection{
+		name:             name,
+		currencyStandard: currencyStandard,
+		hasCurrency:      map[Currency]struct{}{},
+		byUniqueID:       map[int32]Currency{},
+		byUniqueCode:     map[string]Currency{},
+		byNumericCode:    nil,
+		byCode:           nil,
 	}
 
-	if singleStandard {
+	// Enable search by code and numeric code if the collection is set to a single standard.
+	if cc.currencyStandard != "" {
 		cc.byNumericCode, cc.byCode = map[int]Currency{}, map[string]Currency{}
 	}
 
@@ -66,9 +56,13 @@ func NewCurrencyCollection(name string, singleStandard bool, listsOfCurrencies .
 }
 
 // MustNewCurrencyCollection takes one or more list of currencies and returns them as a collection.
+//
+// With currencyStandard you can limit the collection to only allow currencies of a specific standard.
+// Set it to "" if you want to allow multiple currency standards.
+//
 // It will panic on any error.
-func MustNewCurrencyCollection(name string, enableCode bool, listsOfCurrencies ...[]Currency) CurrencyCollection {
-	cc, err := NewCurrencyCollection(name, enableCode, listsOfCurrencies...)
+func MustNewCurrencyCollection(name string, currencyStandard string, listsOfCurrencies ...[]Currency) *CurrencyCollection {
+	cc, err := NewCurrencyCollection(name, currencyStandard, listsOfCurrencies...)
 	if err != nil {
 		panic(fmt.Sprintf("failed to create currency collection %q: %v", name, err))
 	}
@@ -77,29 +71,35 @@ func MustNewCurrencyCollection(name string, enableCode bool, listsOfCurrencies .
 }
 
 // Name returns the name of the currency collection.
-func (cc *currencyCollectionSet) Name() string {
+func (cc *CurrencyCollection) Name() string {
 	return cc.name
 }
 
+// Name returns the name of the currency standard.
+// If this collection can contain multiple standards, this will return "".
+func (cc *CurrencyCollection) CurrencyStandard() string {
+	return cc.currencyStandard
+}
+
 // All returns the full list of currencies that are contained in this collection.
-func (cc *currencyCollectionSet) All() []Currency {
+func (cc *CurrencyCollection) All() []Currency {
 	return cc.all
 }
 
 // ByUniqueID finds a currency by its unique ID (e.g. 42170978).
-func (cc *currencyCollectionSet) ByUniqueID(uniqueID int32) Currency {
+func (cc *CurrencyCollection) ByUniqueID(uniqueID int32) Currency {
 	return cc.byUniqueID[uniqueID]
 }
 
 // ByUniqueCode finds a currency by its unique code (e.g. "ISO4217-EUR").
-func (cc *currencyCollectionSet) ByUniqueCode(uniqueCode string) Currency {
+func (cc *CurrencyCollection) ByUniqueCode(uniqueCode string) Currency {
 	return cc.byUniqueCode[uniqueCode]
 }
 
 // ByNumericCode finds a currency by its numeric code (e.g. 978).
 // This may not yield a result, as the numeric code is not unique across currency standards.
 // Best is to use it only in combination with a collection of a single standard, like ISO4217Currencies.
-func (cc *currencyCollectionSet) ByNumericCode(numericCode int) Currency {
+func (cc *CurrencyCollection) ByNumericCode(numericCode int) Currency {
 	if cc.byNumericCode != nil {
 		return cc.byNumericCode[numericCode]
 	}
@@ -109,7 +109,7 @@ func (cc *currencyCollectionSet) ByNumericCode(numericCode int) Currency {
 // ByCode finds a currency by its code (e.g. "EUR").
 // This may not yield a result, as the code is not unique across currency standards.
 // Best is to use it only in combination with a collection of a single standard, like ISO4217Currencies.
-func (cc *currencyCollectionSet) ByCode(code string) Currency {
+func (cc *CurrencyCollection) ByCode(code string) Currency {
 	if cc.byCode != nil {
 		return cc.byCode[code]
 	}
@@ -117,8 +117,13 @@ func (cc *currencyCollectionSet) ByCode(code string) Currency {
 }
 
 // add adds a currency to this collection.
-func (cc *currencyCollectionSet) add(c Currency) error {
-	uniqueID, uniqueCode, numericCode, code := c.UniqueID(), c.UniqueCode(), c.NumericCode(), c.Code()
+func (cc *CurrencyCollection) add(c Currency) error {
+	currencyStandard, uniqueID, uniqueCode, numericCode, code := c.Standard(), c.UniqueID(), c.UniqueCode(), c.NumericCode(), c.Code()
+
+	// Check currency is allowed to be added.
+	if cc.currencyStandard != "" && cc.currencyStandard != currencyStandard {
+		return fmt.Errorf("currency standard of %q not allowed in this collection, only %q", currencyStandard, cc.currencyStandard)
+	}
 
 	// Check if the currency already exists.
 	// Ignore duplicate entries, but prevent collisions of unique IDs, unique codes or codes.
@@ -154,8 +159,6 @@ func (cc *currencyCollectionSet) add(c Currency) error {
 		return nil
 	}
 
-	// TODO: If singleStandard is set for NewCurrencyCollection, don't allow multiple standards
-
 	cc.all = append(cc.all, c)
 	cc.hasCurrency[c] = struct{}{}
 	cc.byUniqueID[uniqueID] = c
@@ -171,7 +174,7 @@ func (cc *currencyCollectionSet) add(c Currency) error {
 }
 
 // Add adds one or more currencies to this collection.
-func (cc *currencyCollectionSet) Add(currencies ...Currency) error {
+func (cc *CurrencyCollection) Add(currencies ...Currency) error {
 	for _, c := range currencies {
 		if err := cc.add(c); err != nil {
 			return err
