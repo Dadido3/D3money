@@ -262,58 +262,13 @@ func (v Value) SplitWithSmallestUnit(n int, smallestUnit Value) ([]Value, error)
 //	MustFromString("-11.11 ISO4217-EUR").SplitWithDecimals(3, 2) // Returns the three EUR values `-3.71`, `-3.7`, `-3.7`.
 //	MustFromString("-11.11 ISO4217-EUR").SplitWithDecimals(3, 1) // Returns an error, as the value can't be split into parts that are multiple of the smallest unit (0.1).
 func (v Value) SplitWithDecimals(n int, decimalPlaces int) ([]Value, error) {
-	if n <= 0 {
-		return nil, fmt.Errorf("number of parts must not be negative")
-	}
-	if decimalPlaces <= math.MinInt32 || decimalPlaces > math.MaxInt32 { // Exclude the min value from valid range, as we want to invert the number.
+	if decimalPlaces <= math.MinInt32 || decimalPlaces > math.MaxInt32 { // Exclude MinInt32 from valid range, as we want to invert the number.
 		return nil, fmt.Errorf("decimal places (%d) is outside the allowed range", decimalPlaces)
 	}
 
-	smallestUnit := decimal.New(1, -int32(decimalPlaces))
+	smallestUnit := FromDecimal(decimal.New(1, -int32(decimalPlaces)), v.currency)
 
-	// Division with remainder.
-	q, r := v.amount.QuoRem(decimal.NewFromInt(int64(n)), int32(decimalPlaces))
-	parts := make([]decimal.Decimal, n)
-	for i := range parts {
-		parts[i] = q
-	}
-
-	// Distribute remainder.
-distLoop:
-	for {
-		for i := range parts {
-			switch r.Sign() {
-			case 0: // Got everything distributed.
-				break distLoop
-
-			case 1: // We need to add the smallest unit to the parts.
-				parts[i], r = parts[i].Add(smallestUnit), r.Sub(smallestUnit)
-				if r.Sign() == -1 {
-					// Remainder can't be distributed without some value less than smallest unit being left over.
-					return nil, fmt.Errorf("remainder can't be distributed amongst parts")
-				}
-
-			case -1: // We need to subtract the smallest unit from the parts.
-				parts[i], r = parts[i].Sub(smallestUnit), r.Add(smallestUnit)
-				if r.Sign() == 1 {
-					// Remainder can't be distributed without some value less than smallest unit being left over.
-					return nil, fmt.Errorf("remainder can't be distributed amongst parts")
-				}
-			}
-
-		}
-	}
-
-	// Create monetary values from parts.
-	values := make([]Value, 0, len(parts))
-	for _, part := range parts {
-		values = append(values, Value{
-			amount:   part,
-			currency: v.currency,
-		})
-	}
-
-	return values, nil
+	return v.SplitWithSmallestUnit(n, smallestUnit)
 }
 
 // Split returns the value of v split into a list of n values.
