@@ -6,7 +6,10 @@
 package money
 
 import (
+	"math/rand"
 	"testing"
+
+	"github.com/shopspring/decimal"
 )
 
 func TestValue_Equal(t *testing.T) {
@@ -465,12 +468,17 @@ func TestValue_SplitWithSmallestUnit(t *testing.T) {
 		{"e2", MustFromString("1"), args{-1, MustFromString("0.01")}, []Value{}, true},
 		{"e3", MustFromString("1"), args{1, MustFromString("0.00")}, []Value{}, true},
 		{"e4", MustFromString("1"), args{1, MustFromString("-0.01")}, []Value{}, true},
+		{"e5", MustFromString("1"), args{1, MustFromString("0.01 ISO4217-EUR")}, []Value{}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := tt.v.SplitWithSmallestUnit(tt.args.n, tt.args.smallestUnit)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Value.SplitWithSmallestUnit() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if len(got) != len(tt.want) {
+				t.Errorf("Value.SplitWithDecimals() returned unexpected number of elements %v, want %v", len(got), len(tt.want))
 				return
 			}
 			for i, part := range got {
@@ -480,6 +488,69 @@ func TestValue_SplitWithSmallestUnit(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestValue_SplitWithSmallestUnit_Random(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping testing in short mode")
+	}
+
+	for i := 0; i < 10000; i++ {
+
+		// Choose random smallest unit.
+		smallestUnit := FromDecimal(decimal.New(rand.Int63n(100000), 10-rand.Int31n(100)), nil)
+
+		// Choose random part value.
+		partValue1 := FromInt64(rand.Int63(), nil).MustMul(smallestUnit)
+		partValue2 := partValue1.MustAdd(smallestUnit)
+		// Randomize sign.
+		if rand.Intn(2) == 0 {
+			partValue1, partValue2 = partValue1.Neg(), partValue2.Neg()
+		}
+
+		// Generate expected list with partsCount elements.
+		partsCount := rand.Intn(100) + 1
+		partsLarger := rand.Intn(partsCount + 1) // Some number of parts will be larger/smaller by smallestUnit.
+		want := make([]Value, partsCount)
+		for i := range want {
+			if i >= partsLarger {
+				want[i] = partValue1
+			} else {
+				want[i] = partValue2
+			}
+		}
+
+		sum := MustSum(want[0], want[1:]...)
+
+		got, err := sum.SplitWithSmallestUnit(partsCount, smallestUnit)
+		if smallestUnit.IsZero() && err == nil {
+			t.Logf("sum = %v", sum)
+			t.Logf("want = %v", want)
+			t.Errorf("sum.SplitWithSmallestUnit() error = %v, but expected error", err)
+			return
+		} else if smallestUnit.IsZero() && err != nil {
+			return // Error is expected.
+		}
+		if err != nil {
+			t.Logf("sum = %v", sum)
+			t.Logf("want = %v", want)
+			t.Errorf("sum.SplitWithSmallestUnit() failed: %v", err)
+			return
+		}
+		if len(got) != len(want) {
+			t.Logf("sum = %v", sum)
+			t.Logf("want = %v", want)
+			t.Errorf("sum.SplitWithSmallestUnit() returned unexpected number of elements %v, want %v", len(got), len(want))
+			return
+		}
+		for i, part := range got {
+			if equal, _ := part.Equal(want[i]); !equal {
+				t.Logf("sum = %v", sum)
+				t.Errorf("sum.SplitWithSmallestUnit() = %v, want %v", got, want)
+				return
+			}
+		}
 	}
 }
 
@@ -537,6 +608,10 @@ func TestValue_SplitWithDecimals(t *testing.T) {
 				t.Errorf("Value.SplitWithDecimals() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
+			if len(got) != len(tt.want) {
+				t.Errorf("Value.SplitWithDecimals() returned unexpected number of elements %v, want %v", len(got), len(tt.want))
+				return
+			}
 			for i, part := range got {
 				if equal, _ := part.Equal(tt.want[i]); !equal {
 					t.Errorf("Value.SplitWithDecimals() = %v, want %v", got, tt.want)
@@ -544,6 +619,62 @@ func TestValue_SplitWithDecimals(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestValue_SplitWithDecimals_Random(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping testing in short mode")
+	}
+
+	for i := 0; i < 10000; i++ {
+
+		// Choose random smallest unit.
+		decimals := 90 - rand.Int31n(100)
+		smallestUnit := FromDecimal(decimal.New(1, -decimals), nil)
+
+		// Choose random part value.
+		partValue1 := FromInt64(rand.Int63(), nil).MustMul(smallestUnit)
+		partValue2 := partValue1.MustAdd(smallestUnit)
+		// Randomize sign.
+		if rand.Intn(2) == 0 {
+			partValue1, partValue2 = partValue1.Neg(), partValue2.Neg()
+		}
+
+		// Generate expected list with partsCount elements.
+		partsCount := rand.Intn(100) + 1
+		partsLarger := rand.Intn(partsCount + 1) // Some number of parts will be larger/smaller by smallestUnit.
+		want := make([]Value, partsCount)
+		for i := range want {
+			if i >= partsLarger {
+				want[i] = partValue1
+			} else {
+				want[i] = partValue2
+			}
+		}
+
+		sum := MustSum(want[0], want[1:]...)
+
+		got, err := sum.SplitWithDecimals(partsCount, int(decimals))
+		if err != nil {
+			t.Logf("sum = %v", sum)
+			t.Logf("want = %v", want)
+			t.Errorf("sum.SplitWithDecimals() failed: %v", err)
+			return
+		}
+		if len(got) != len(want) {
+			t.Logf("sum = %v", sum)
+			t.Logf("want = %v", want)
+			t.Errorf("sum.SplitWithDecimals() returned unexpected number of elements %v, want %v", len(got), len(want))
+			return
+		}
+		for i, part := range got {
+			if equal, _ := part.Equal(want[i]); !equal {
+				t.Logf("sum = %v", sum)
+				t.Errorf("sum.SplitWithDecimals() = %v, want %v", got, want)
+				return
+			}
+		}
 	}
 }
 
@@ -568,6 +699,10 @@ func TestValue_Split(t *testing.T) {
 			got, err := tt.v.Split(tt.args.n)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Value.Split() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if len(got) != len(tt.want) {
+				t.Errorf("Value.SplitWithDecimals() returned unexpected number of elements %v, want %v", len(got), len(tt.want))
 				return
 			}
 			for i, part := range got {
