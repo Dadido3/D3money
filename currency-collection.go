@@ -7,11 +7,13 @@ package money
 
 import (
 	"fmt"
+	"sync"
 )
 
 // CurrencyCollection is a container for currencies.
-//
 type CurrencyCollection struct {
+	mutex sync.RWMutex
+
 	name string
 
 	// Name of the currency standard that this collection is limited to.
@@ -83,16 +85,25 @@ func (cc *CurrencyCollection) CurrencyStandard() string {
 
 // All returns the full list of currencies that are contained in this collection.
 func (cc *CurrencyCollection) All() []Currency {
+	cc.mutex.RLock()
+	defer cc.mutex.RUnlock()
+
 	return cc.all
 }
 
 // ByUniqueID finds a currency by its unique ID (e.g. 42170978).
 func (cc *CurrencyCollection) ByUniqueID(uniqueID int32) Currency {
+	cc.mutex.RLock()
+	defer cc.mutex.RUnlock()
+
 	return cc.byUniqueID[uniqueID]
 }
 
 // ByUniqueCode finds a currency by its unique code (e.g. "ISO4217-EUR").
 func (cc *CurrencyCollection) ByUniqueCode(uniqueCode string) Currency {
+	cc.mutex.RLock()
+	defer cc.mutex.RUnlock()
+
 	return cc.byUniqueCode[uniqueCode]
 }
 
@@ -101,6 +112,9 @@ func (cc *CurrencyCollection) ByUniqueCode(uniqueCode string) Currency {
 // Best is to use it only in combination with a collection of a single standard, like ISO4217Currencies.
 func (cc *CurrencyCollection) ByNumericCode(numericCode int) Currency {
 	if cc.byNumericCode != nil {
+		cc.mutex.RLock()
+		defer cc.mutex.RUnlock()
+
 		return cc.byNumericCode[numericCode]
 	}
 	return nil
@@ -111,6 +125,9 @@ func (cc *CurrencyCollection) ByNumericCode(numericCode int) Currency {
 // Best is to use it only in combination with a collection of a single standard, like ISO4217Currencies.
 func (cc *CurrencyCollection) ByCode(code string) Currency {
 	if cc.byCode != nil {
+		cc.mutex.RLock()
+		defer cc.mutex.RUnlock()
+
 		return cc.byCode[code]
 	}
 	return nil
@@ -175,6 +192,9 @@ func (cc *CurrencyCollection) add(c Currency) error {
 
 // Add adds one or more currencies to this collection.
 func (cc *CurrencyCollection) Add(currencies ...Currency) error {
+	cc.mutex.Lock()
+	defer cc.mutex.Unlock()
+
 	for _, c := range currencies {
 		if err := cc.add(c); err != nil {
 			return err
