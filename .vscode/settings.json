@@ -9,6 +9,7 @@
         "dbname",
         "Dialector",
         "Gorm",
+        "isready",
         "jackc",
         "mattn",
         "shopspring",
