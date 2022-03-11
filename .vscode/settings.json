@@ -6,11 +6,15 @@
     "cSpell.words": [
         "BYTEA",
         "Dadido",
+        "dbname",
         "Dialector",
         "Gorm",
+        "isready",
+        "jackc",
         "mattn",
         "shopspring",
         "sqlite",
+        "sslmode",
         "unmarshalled",
         "unmarshalling",
         "Vogel"
