@@ -26,6 +26,7 @@ var db *sql.DB
 // gormDB is the GORM database instance for the whole db-tests package.
 var gormDB *gorm.DB
 
+// Set up some stuff before the tests run.
 func TestMain(m *testing.M) {
 
 	flag.Parse()

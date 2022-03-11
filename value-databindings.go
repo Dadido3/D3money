@@ -10,6 +10,7 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/shopspring/decimal"
 	"gorm.io/gorm"
@@ -117,8 +118,16 @@ func (v *Value) GobDecode(data []byte) error {
 }
 
 // Value implements the valuer interface of databases.
+//
+// The format that is returned allows to be used with PostgreSQL composite types.
 func (v Value) Value() (driver.Value, error) {
-	return v.String(), nil
+	if v.currency != nil {
+		// Output "Amount UniqueCode" pair.
+		return "(" + v.amount.String() + "," + v.currency.UniqueCode() + ")", nil
+	}
+
+	// If there is no currency output only "Amount".
+	return "(" + v.amount.String() + ",)", nil
 }
 
 // Scan fills the object with data matching the given value from the database.
@@ -128,7 +137,9 @@ func (v *Value) Scan(value interface{}) error {
 		return fmt.Errorf("incompatible type %T, expected %T", value, str)
 	}
 
-	amount, newCur, err := parse(str, Currencies, nil)
+	trimmed := strings.Trim(str, "()")
+	replaced := strings.ReplaceAll(trimmed, ",", " ")
+	amount, newCur, err := parse(strings.TrimRight(replaced, " "), Currencies, nil)
 	if err != nil {
 		return fmt.Errorf("failed to parse string %q: %w", str, err)
 	}
@@ -142,6 +153,12 @@ func (v *Value) Scan(value interface{}) error {
 func (v Value) GormDBDataType(db *gorm.DB, field *schema.Field) string {
 	// Use field.Tag, field.TagSettings gets field's tags.
 	// Checkout https://github.com/go-gorm/gorm/blob/master/schema/field.go for all options.
+
+	// Allow the user to override the row type.
+	// Needed when using a PostgreSQL composite type for the row.
+	if rowType, ok := field.TagSettings["TYPE"]; ok {
+		return rowType
+	}
 
 	// Return database type based on driver name.
 	switch db.Dialector.Name() {

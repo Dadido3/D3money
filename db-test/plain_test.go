@@ -10,34 +10,34 @@ import (
 
 func TestPlain(t *testing.T) {
 	// Drop tables.
-	if _, err := db.Exec("DROP TABLE IF EXISTS accounts"); err != nil {
+	if _, err := db.Exec("DROP TABLE IF EXISTS test_accounts"); err != nil {
 		t.Errorf("Failed to drop table: %v", err)
 		return
 	}
 
 	// Create tables.
-	if _, err := db.Exec("CREATE TABLE accounts (id INTEGER, balance VARCHAR(255))"); err != nil {
+	if _, err := db.Exec("CREATE TABLE test_accounts (id INTEGER, balance VARCHAR(255))"); err != nil {
 		t.Errorf("Failed to create table: %v", err)
 		return
 	}
 
 	// Create test entry.
-	a1 := &Account{
+	a1 := &TestAccount{
 		ID:      1,
 		Balance: money.FromDecimal(decimal.New(int64(rand.Intn(100000000)), -4), money.ISO4217Currencies.ByCode("EUR")),
 	}
 
 	// Create test entry.
-	a2 := &Account{
+	a2 := &TestAccount{
 		ID:      2,
 		Balance: money.FromDecimal(decimal.New(int64(rand.Intn(100000000)), -4), nil),
 	}
 
 	var stmtString string
 	if *flagDBDriver == "pgx" {
-		stmtString = "INSERT INTO accounts (id, balance) VALUES ($1, $2);"
+		stmtString = "INSERT INTO test_accounts (id, balance) VALUES ($1, $2);"
 	} else {
-		stmtString = "INSERT INTO accounts (id, balance) VALUES (?, ?);"
+		stmtString = "INSERT INTO test_accounts (id, balance) VALUES (?, ?);"
 	}
 
 	// Insert test entry 1 into database.
@@ -52,9 +52,9 @@ func TestPlain(t *testing.T) {
 	}
 
 	if *flagDBDriver == "pgx" {
-		stmtString = "SELECT id, balance FROM accounts WHERE id = $1"
+		stmtString = "SELECT id, balance FROM test_accounts WHERE id = $1"
 	} else {
-		stmtString = "SELECT id, balance FROM accounts WHERE id = ?"
+		stmtString = "SELECT id, balance FROM test_accounts WHERE id = ?"
 	}
 
 	// Read test entries from database.
@@ -65,7 +65,7 @@ func TestPlain(t *testing.T) {
 	}
 	defer stmt.Close()
 
-	a1Read := new(Account)
+	a1Read := new(TestAccount)
 
 	err = stmt.QueryRow(1).Scan(&a1Read.ID, &a1Read.Balance)
 	if err != nil {
@@ -76,7 +76,7 @@ func TestPlain(t *testing.T) {
 		t.Errorf("a1Read.Balance = %v, want %v", a1Read.Balance, a1.Balance)
 	}
 
-	a2Read := new(Account)
+	a2Read := new(TestAccount)
 
 	err = stmt.QueryRow(2).Scan(&a2Read.ID, &a2Read.Balance)
 	if err != nil {
