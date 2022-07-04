@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/shopspring/decimal"
+	"golang.org/x/text/language"
 )
 
 // testCurrency implements a custom currency for testing purposes.
@@ -21,14 +22,14 @@ type testCurrency struct {
 	noSmallestUnitCurrency                     bool // If true, SmallestUnit will return a Value with no currency set.
 }
 
-func (c *testCurrency) Name() string         { return c.code }
-func (c *testCurrency) Standard() string     { return c.standard }
-func (c *testCurrency) UniqueID() int32      { return c.uniqueID }
-func (c *testCurrency) UniqueCode() string   { return c.Standard() + "-" + c.Code() }
-func (c *testCurrency) NumericCode() int     { return c.numericCode }
-func (c *testCurrency) Code() string         { return c.code }
-func (c *testCurrency) Symbol() string       { return c.symbol }
-func (c *testCurrency) NarrowSymbol() string { return c.narrowSymbol }
+func (c *testCurrency) Name() string                          { return c.code }
+func (c *testCurrency) Standard() string                      { return c.standard }
+func (c *testCurrency) UniqueID() int32                       { return c.uniqueID }
+func (c *testCurrency) UniqueCode() string                    { return c.Standard() + "-" + c.Code() }
+func (c *testCurrency) NumericCode() int                      { return c.numericCode }
+func (c *testCurrency) Code() string                          { return c.code }
+func (c *testCurrency) Symbol(lang language.Tag) string       { return c.symbol }
+func (c *testCurrency) NarrowSymbol(lang language.Tag) string { return c.narrowSymbol }
 func (c *testCurrency) SmallestUnit() Value {
 	if c.noSmallestUnitCurrency {
 		return Value{c.smallestUnit, nil}

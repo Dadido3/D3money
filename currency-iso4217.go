@@ -5,7 +5,10 @@
 
 package money
 
-import "github.com/shopspring/decimal"
+import (
+	"github.com/shopspring/decimal"
+	"golang.org/x/text/language"
+)
 
 // iso4217Name is the name of the currency standard.
 const iso4217Name = "ISO4217"
@@ -82,20 +85,18 @@ func (c *ISO4217Currency) Code() string {
 
 // Symbol returns a string containing the symbol of the currency.
 // This may be ambiguous, and should only be used for formatting into a human readable format.
-// This also doesn't follow any official standard.
 //
 // Examples: "US$", "AU$", "€", "₿".
-func (c *ISO4217Currency) Symbol() string {
+func (c *ISO4217Currency) Symbol(lang language.Tag) string {
 	return c.symbol
 }
 
 // NarrowSymbol returns a string containing the narrow symbol variant of the currency.
 // This may be ambiguous, and should only be used for formatting into a human readable format.
 // This needs additional context when used in text output, as it doesn't differentiate between all the dollar currencies.
-// This also doesn't follow any official standard.
 //
 // Examples: "$", "$", "€", "₿".
-func (c *ISO4217Currency) NarrowSymbol() string {
+func (c *ISO4217Currency) NarrowSymbol(lang language.Tag) string {
 	if c.narrowSymbol != "" {
 		return c.narrowSymbol
 	}
