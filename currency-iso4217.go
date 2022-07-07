@@ -88,7 +88,10 @@ func (c *ISO4217Currency) Code() string {
 //
 // Examples: "US$", "AU$", "€", "₿".
 func (c *ISO4217Currency) Symbol(lang language.Tag) string {
-	return c.symbol
+	if c.symbol != "" {
+		return c.symbol
+	}
+	return c.Code() // Fall back to code.
 }
 
 // NarrowSymbol returns a string containing the narrow symbol variant of the currency.
@@ -100,7 +103,7 @@ func (c *ISO4217Currency) NarrowSymbol(lang language.Tag) string {
 	if c.narrowSymbol != "" {
 		return c.narrowSymbol
 	}
-	return c.symbol
+	return c.Symbol(lang) // Fall back to symbol.
 }
 
 // SmallestUnit returns the value of the fractional unit.

@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/shopspring/decimal"
+	"golang.org/x/text/language"
 )
 
 // Value represents a monetary value in a specific currency.
@@ -200,4 +201,11 @@ func parse(str string, cc *CurrencyCollection, additionalCurrency Currency) (dec
 // Currency returns the used currency.
 func (v Value) Currency() Currency {
 	return v.currency
+}
+
+func (v Value) Formatter(language language.Tag) ValueFormatter {
+	return ValueFormatter{
+		value:    v,
+		language: language,
+	}
 }
