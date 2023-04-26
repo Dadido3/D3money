@@ -2,21 +2,28 @@
 
 A library to handle monetary values and currencies.
 
+This library is still in development.
+While it works and most of its functionality is tested by unit tests, the API may have breaking changes until version 1.0.0 is reached.
+
 ## Features
 
-- Uses [shopspring/decimal](https://github.com/shopspring/decimal) for arbitrary-precision fixed-point decimal numbers
-- Immutable by default for safety
-- ISO 4217 currencies
-- Extendable to more/custom currencies without risking overlaps of codes or IDs
-- Tests to ensure uniqueness and validity of currencies
-- Data-bindings for JSON, Binary, Text, Gob encodings
-- Implements scanner and valuer interfaces for databases
-- Implements `GormDBDataTypeInterface`
+- Uses [shopspring/decimal](https://github.com/shopspring/decimal) for arbitrary-precision fixed-point decimal numbers.
+- Values are immutable by default for safety.
+- ISO 4217 currencies.
+- Extendable with custom currencies.
+- Tests to ensure uniqueness and correctness of (even custom) currencies.
+- Useful mathematical operations, including a way to split a monetary value into several parts.
+- Data-bindings for JSON, Binary, Text, Gob encodings.
+- Implements scanner and valuer interfaces for databases.
+- Implements `GormDBDataTypeInterface`.
 
 Planned:
 
-- [ ] List of cryptocurrencies
-- [ ] Formatting of values with specified locale
+- [ ] Include cryptocurrencies and tokens.
+- [ ] Split locale and currency information.
+- [ ] Formatting of values with specified locale. Support CLDR as good as possible, also `go generate` support.
+- [ ] Migration field for currencies, e.g. to describe how custom currencies will map to official supported currencies.
+- [ ] Generate currency data from the official ISO 4217 sources via `go generate`.
 
 ## Usage
 
@@ -29,7 +36,7 @@ go get github.com/Dadido3/D3money
 And then import it with
 
 ```go
-import "github.com/Dadido3/D3money"
+import money "github.com/Dadido3/D3money"
 ```
 
 ### Values
@@ -95,3 +102,5 @@ Afterwards you can register the currency by adding it to the library by using.
 err := money.Currencies.Add(customCurrency)      // Register single custom currency.
 err := money.Currencies.Add(customCurrencies...) // Register list of custom currencies.
 ```
+
+If you add custom currencies, make sure to only use negative unique IDs to prevent ID collisions with official currencies in the future.
