@@ -7,7 +7,7 @@ import (
 )
 
 type TestAccount struct {
-	ID        uint `gorm:"primarykey"`
+	ID        uint `gorm:"primaryKey"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
 
@@ -15,7 +15,7 @@ type TestAccount struct {
 }
 
 type TestAccountCompositeType struct {
-	ID        uint `gorm:"primarykey"`
+	ID        uint `gorm:"primaryKey"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
 
