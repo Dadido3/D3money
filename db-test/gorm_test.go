@@ -70,7 +70,7 @@ func TestCompositeType(t *testing.T) {
 	}
 
 	// Create custom composite type.
-	if err := gormDB.Exec("DROP TYPE IF EXISTS d3money; CREATE TYPE d3money AS (amount DECIMAL, currency VARCHAR);").Error; err != nil {
+	if err := gormDB.Exec("DROP TYPE IF EXISTS d3money; CREATE TYPE d3money AS (amount DECIMAL, currency INTEGER);").Error; err != nil {
 		t.Fatalf("Failed to create d3money composite type: %v", err)
 	}
 
@@ -118,7 +118,7 @@ func TestCompositeType(t *testing.T) {
 	// Test direct access to the fields of the composite type.
 	type CompositeFields struct {
 		Amount   decimal.Decimal
-		Currency string
+		Currency int32
 	}
 
 	var a1ReadFields CompositeFields
@@ -126,7 +126,7 @@ func TestCompositeType(t *testing.T) {
 		t.Errorf("Failed to query account 1: %v", err)
 	}
 
-	a1ExpectedFields := CompositeFields{a1.Balance.Decimal(), a1.Balance.Currency().UniqueCode()}
+	a1ExpectedFields := CompositeFields{a1.Balance.Decimal(), a1.Balance.Currency().UniqueID()}
 	if !reflect.DeepEqual(a1ReadFields, a1ExpectedFields) {
 		t.Errorf("Queried balance fields %+v don't match expected fields %+v", a1ReadFields, a1ExpectedFields)
 	}
@@ -136,7 +136,7 @@ func TestCompositeType(t *testing.T) {
 		t.Errorf("Failed to query account 2: %v", err)
 	}
 
-	a2ExpectedFields := CompositeFields{a2.Balance.Decimal(), ""}
+	a2ExpectedFields := CompositeFields{a2.Balance.Decimal(), 0}
 	if !reflect.DeepEqual(a2ReadFields, a2ExpectedFields) {
 		t.Errorf("Queried balance fields %+v don't match expected fields %+v", a2ReadFields, a2ExpectedFields)
 	}

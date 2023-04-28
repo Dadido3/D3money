@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2022 David Vogel
+// Copyright (c) 2021-2023 David Vogel
 //
 // This software is released under the MIT License.
 // https://opensource.org/licenses/MIT
@@ -10,6 +10,7 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/shopspring/decimal"
@@ -123,7 +124,7 @@ func (v *Value) GobDecode(data []byte) error {
 func (v Value) Value() (driver.Value, error) {
 	if v.currency != nil {
 		// Output "Amount UniqueCode" pair.
-		return "(" + v.amount.String() + "," + v.currency.UniqueCode() + ")", nil
+		return "(" + v.amount.String() + "," + strconv.Itoa(int(v.currency.UniqueID())) + ")", nil
 	}
 
 	// If there is no currency output only "Amount".
@@ -138,13 +139,47 @@ func (v *Value) Scan(value interface{}) error {
 	}
 
 	trimmed := strings.Trim(str, "()")
-	replaced := strings.ReplaceAll(trimmed, ",", " ")
-	amount, newCur, err := parse(strings.TrimRight(replaced, " "), Currencies, nil)
-	if err != nil {
-		return fmt.Errorf("failed to parse string %q: %w", str, err)
+
+	var amountStr, curStr string
+	var currency Currency
+
+	// Parse expression.
+	split := strings.Split(trimmed, ",")
+	switch len(split) {
+	case 1:
+		// String contains an amount string.
+		amountStr = strings.Trim(split[0], " ")
+
+	case 2:
+		// String contains an amount string + unique currency code.
+		amountStr, curStr = strings.Trim(split[0], " "), strings.Trim(split[1], " ")
+
+		if curStr != "" {
+			// Look in global collection for the currency.
+			uniqueID64, err := strconv.ParseInt(curStr, 10, 32)
+			if err != nil {
+				return fmt.Errorf("failed to parse currency ID from database field: %w", err)
+			}
+			uniqueID := int32(uniqueID64)
+			currency = Currencies.ByUniqueID(uniqueID)
+
+			// If there is no match, return error.
+			if currency == nil {
+				return &ErrorCantFindUniqueID{uniqueID}
+			}
+		}
+
+	default:
+		return fmt.Errorf("input string %q contains too many spaces", str)
 	}
 
-	v.amount, v.currency = amount, newCur
+	// Parse amount string.
+	amount, err := decimal.NewFromString(amountStr)
+	if err != nil {
+		return err
+	}
+
+	v.amount, v.currency = amount, currency
 
 	return nil
 }
