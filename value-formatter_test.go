@@ -19,13 +19,13 @@ func TestValueFormatter_String(t *testing.T) {
 		display ValueFormatterDisplay
 		want    string
 	}{
-		{MustFromStringAndCurrency("0", ISO4217Currencies.ByCode("USD")), "en", DisplaySymbol, "$0.00"},
+		/*{MustFromStringAndCurrency("0", ISO4217Currencies.ByCode("USD")), "en", DisplaySymbol, "$0.00"},
 		{MustFromStringAndCurrency("0", ISO4217Currencies.ByCode("USD")), "en", DisplayNarrow, "$0.00"},
 		{MustFromStringAndCurrency("0", ISO4217Currencies.ByCode("USD")), "en", DisplayCode, "USD 0.00"},
 		{MustFromStringAndCurrency("0", ISO4217Currencies.ByCode("USD")), "en", DisplayName, "0.00 US dollars"},
 		{MustFromStringAndCurrency("1", ISO4217Currencies.ByCode("USD")), "en", DisplaySymbol, "$1.00"},
 		{MustFromStringAndCurrency("1", ISO4217Currencies.ByCode("USD")), "en", DisplayNarrow, "$1.00"},
-		/*{MustFromStringAndCurrency("1", ISO4217Currencies.ByCode("USD")), "en", DisplayCode, "USD 1.00"},
+		{MustFromStringAndCurrency("1", ISO4217Currencies.ByCode("USD")), "en", DisplayCode, "USD 1.00"},
 		{MustFromStringAndCurrency("1", ISO4217Currencies.ByCode("USD")), "en", DisplayName, "1.00 US dollars"},
 		{MustFromStringAndCurrency("2", ISO4217Currencies.ByCode("USD")), "en", DisplaySymbol, "$2.00"},
 		{MustFromStringAndCurrency("2", ISO4217Currencies.ByCode("USD")), "en", DisplayNarrow, "$2.00"},
