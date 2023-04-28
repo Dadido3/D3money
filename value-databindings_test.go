@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2022 David Vogel
+// Copyright (c) 2021-2023 David Vogel
 //
 // This software is released under the MIT License.
 // https://opensource.org/licenses/MIT
@@ -65,7 +65,7 @@ func TestJSONMarshalling(t *testing.T) {
 		t.Fatalf("Amount of values %d and unmarshalled values %d is not equal", len(values), len(unmarshalledValues))
 	}
 	for i, value := range values {
-		if equal, err := value.Equal(unmarshalledValues[i]); err != nil {
+		if equal, err := value.EqualDetailed(unmarshalledValues[i]); err != nil {
 			t.Errorf("JSON roundtrip failed: %v", err)
 		} else if !equal {
 			t.Errorf("JSON roundtrip failed. Values %q and %q are not equal", value, unmarshalledValues[i])
@@ -106,7 +106,7 @@ func TestBinaryMarshalling(t *testing.T) {
 		t.Fatalf("Amount of values %d and unmarshalled values %d is not equal", len(values), len(unmarshalledValues))
 	}
 	for i, value := range values {
-		if equal, err := value.Equal(unmarshalledValues[i]); err != nil {
+		if equal, err := value.EqualDetailed(unmarshalledValues[i]); err != nil {
 			t.Errorf("Binary roundtrip failed: %v", err)
 		} else if !equal {
 			t.Errorf("Binary roundtrip failed. Values %q and %q are not equal", value, unmarshalledValues[i])
@@ -167,7 +167,7 @@ func TestTextMarshalling(t *testing.T) {
 		t.Fatalf("Amount of values %d and unmarshalled values %d is not equal", len(values), len(unmarshalledValues))
 	}
 	for i, value := range values {
-		if equal, err := value.Equal(unmarshalledValues[i]); err != nil {
+		if equal, err := value.EqualDetailed(unmarshalledValues[i]); err != nil {
 			t.Errorf("Text roundtrip failed: %v", err)
 		} else if !equal {
 			t.Errorf("Text roundtrip failed. Values %q and %q are not equal", value, unmarshalledValues[i])
@@ -210,7 +210,7 @@ func TestGobEncoding(t *testing.T) {
 		t.Fatalf("Amount of values %d and decoded values %d is not equal", len(values), len(decodedValues))
 	}
 	for i, value := range values {
-		if equal, err := value.Equal(decodedValues[i]); err != nil {
+		if equal, err := value.EqualDetailed(decodedValues[i]); err != nil {
 			t.Errorf("Binary roundtrip failed: %v", err)
 		} else if !equal {
 			t.Errorf("Binary roundtrip failed. Values %q and %q are not equal", value, decodedValues[i])

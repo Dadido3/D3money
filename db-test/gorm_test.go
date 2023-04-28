@@ -39,7 +39,7 @@ func TestCreateQuery(t *testing.T) {
 		t.Errorf("Failed to query account 1: %v", err)
 	}
 
-	if equal, err := a1.Balance.Equal(a1Read.Balance); err != nil {
+	if equal, err := a1.Balance.EqualDetailed(a1Read.Balance); err != nil {
 		t.Errorf("a1.Balance.Equal(a1Read.Balance) returned error: %v", err)
 	} else if !equal {
 		t.Errorf("Queried balance %v doesn't match written balance %v", a1Read.Balance, a1.Balance)
@@ -50,7 +50,7 @@ func TestCreateQuery(t *testing.T) {
 		t.Errorf("Failed to query account 2: %v", err)
 	}
 
-	if equal, err := a2.Balance.Equal(a2Read.Balance); err != nil {
+	if equal, err := a2.Balance.EqualDetailed(a2Read.Balance); err != nil {
 		t.Errorf("a2.Balance.Equal(a2Read.Balance) returned error: %v", err)
 	} else if !equal {
 		t.Errorf("Queried balance %v doesn't match written balance %v", a2Read.Balance, a2.Balance)
@@ -98,7 +98,7 @@ func TestCompositeType(t *testing.T) {
 		t.Errorf("Failed to query account 1: %v", err)
 	}
 
-	if equal, err := a1.Balance.Equal(a1Read.Balance); err != nil {
+	if equal, err := a1.Balance.EqualDetailed(a1Read.Balance); err != nil {
 		t.Errorf("a1.Balance.Equal(a1Read.Balance) returned error: %v", err)
 	} else if !equal {
 		t.Errorf("Queried balance %v doesn't match written balance %v", a1Read.Balance, a1.Balance)
@@ -109,7 +109,7 @@ func TestCompositeType(t *testing.T) {
 		t.Errorf("Failed to query account 2: %v", err)
 	}
 
-	if equal, err := a2.Balance.Equal(a2Read.Balance); err != nil {
+	if equal, err := a2.Balance.EqualDetailed(a2Read.Balance); err != nil {
 		t.Errorf("a2.Balance.Equal(a2Read.Balance) returned error: %v", err)
 	} else if !equal {
 		t.Errorf("Queried balance %v doesn't match written balance %v", a2Read.Balance, a2.Balance)

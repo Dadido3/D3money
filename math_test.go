@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2022 David Vogel
+// Copyright (c) 2021-2023 David Vogel
 //
 // This software is released under the MIT License.
 // https://opensource.org/licenses/MIT
@@ -33,7 +33,7 @@ func TestSum(t *testing.T) {
 				t.Errorf("Sum() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if equal, _ := got.Equal(tt.want); !equal {
+			if !got.Equal(tt.want) {
 				t.Errorf("Sum() = %v, want %v", got, tt.want)
 			}
 		})

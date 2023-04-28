@@ -72,7 +72,7 @@ func TestPlain(t *testing.T) {
 		t.Errorf("stmt.QueryRow(1) failed: %v", err)
 	}
 
-	if equal, _ := a1.Balance.Equal(a1Read.Balance); !equal {
+	if !a1.Balance.Equal(a1Read.Balance) {
 		t.Errorf("a1Read.Balance = %v, want %v", a1Read.Balance, a1.Balance)
 	}
 
@@ -83,7 +83,7 @@ func TestPlain(t *testing.T) {
 		t.Errorf("stmt.QueryRow(2) failed: %v", err)
 	}
 
-	if equal, _ := a2.Balance.Equal(a2Read.Balance); !equal {
+	if !a2.Balance.Equal(a2Read.Balance) {
 		t.Errorf("a2Read.Balance = %v, want %v", a2Read.Balance, a2.Balance)
 	}
 

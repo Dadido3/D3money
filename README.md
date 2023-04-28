@@ -21,9 +21,15 @@ Planned:
 
 - [ ] Include cryptocurrencies and tokens.
 - [ ] Split locale and currency information.
-- [ ] Formatting of values with specified locale. Support CLDR as good as possible, also `go generate` support.
+- [ ] Formatting of values with specified locale. Support CLDR as good as possible, also `go generate` support to convert LDML based data into go code and structures.
 - [ ] Migration field for currencies, e.g. to describe how custom currencies will map to official supported currencies.
 - [ ] Generate currency data from the official ISO 4217 sources via `go generate`.
+
+## What this not is
+
+A high performance library to do number crunching with.
+While this library isn't slow, it's not meant for handling huge tables of monetary values.
+The focus of this library is on correctness and ease of use.
 
 ## Usage
 

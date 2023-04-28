@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2022 David Vogel
+// Copyright (c) 2021-2023 David Vogel
 //
 // This software is released under the MIT License.
 // https://opensource.org/licenses/MIT
@@ -122,9 +122,9 @@ func (c *ISO4217Currency) String() string {
 // Source: https://www.currency-iso.org/en/home/tables/table-a1.html
 //
 // This data has been modified in the following ways:
-//  - Removed "ENTITY" column
-//  - Removed duplicate entries (due to removal of the "ENTITY" column)
-//  - Add "symbol" and "narrowSymbol" columns that contain symbols which are NOT part of ISO 4217. Based on https://web.archive.org/web/20111129141202/http://fx.sauder.ubc.ca/currency_table.html and https://wikipedia.org
+//   - Removed "ENTITY" column
+//   - Removed duplicate entries (due to removal of the "ENTITY" column)
+//   - Add "symbol" and "narrowSymbol" columns that contain symbols which are NOT part of ISO 4217. Based on https://web.archive.org/web/20111129141202/http://fx.sauder.ubc.ca/currency_table.html and https://wikipedia.org
 var iso4217Currencies = []Currency{
 	&ISO4217Currency{alphabeticCode: "AFN", numericCode: 971, symbol: "؋", narrowSymbol: "", smallestUnit: decimal.New(1, -2), name: "Afghani"},
 	&ISO4217Currency{alphabeticCode: "EUR", numericCode: 978, symbol: "€", narrowSymbol: "", smallestUnit: decimal.New(1, -2), name: "Euro"},

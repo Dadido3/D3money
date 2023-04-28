@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2022 David Vogel
+// Copyright (c) 2021-2023 David Vogel
 //
 // This software is released under the MIT License.
 // https://opensource.org/licenses/MIT
@@ -34,13 +34,17 @@ func TestValue_Equal(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := tt.v.Equal(tt.args.comp)
+			got := tt.v.Equal(tt.args.comp)
+			if got != tt.want {
+				t.Errorf("Value.Equal() = %v, want %v", got, tt.want)
+			}
+			got, err := tt.v.EqualDetailed(tt.args.comp)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("Value.Equal() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("Value.EqualDetailed() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if got != tt.want {
-				t.Errorf("Value.Equal() = %v, want %v", got, tt.want)
+				t.Errorf("Value.EqualDetailed() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -65,13 +69,17 @@ func TestValue_GreaterThan(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := tt.v.GreaterThan(tt.args.comp)
+			got := tt.v.GreaterThan(tt.args.comp)
+			if got != tt.want {
+				t.Errorf("Value.GreaterThan() = %v, want %v", got, tt.want)
+			}
+			got, err := tt.v.GreaterThanDetailed(tt.args.comp)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("Value.GreaterThan() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("Value.GreaterThanDetailed() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if got != tt.want {
-				t.Errorf("Value.GreaterThan() = %v, want %v", got, tt.want)
+				t.Errorf("Value.GreaterThanDetailed() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -96,13 +104,17 @@ func TestValue_GreaterThanOrEqual(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := tt.v.GreaterThanOrEqual(tt.args.comp)
+			got := tt.v.GreaterThanOrEqual(tt.args.comp)
+			if got != tt.want {
+				t.Errorf("Value.GreaterThanOrEqual() = %v, want %v", got, tt.want)
+			}
+			got, err := tt.v.GreaterThanOrEqualDetailed(tt.args.comp)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("Value.GreaterThanOrEqual() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("Value.GreaterThanOrEqualDetailed() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if got != tt.want {
-				t.Errorf("Value.GreaterThanOrEqual() = %v, want %v", got, tt.want)
+				t.Errorf("Value.GreaterThanOrEqualDetailed() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -127,13 +139,17 @@ func TestValue_LessThan(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := tt.v.LessThan(tt.args.comp)
+			got := tt.v.LessThan(tt.args.comp)
+			if got != tt.want {
+				t.Errorf("Value.LessThan() = %v, want %v", got, tt.want)
+			}
+			got, err := tt.v.LessThanDetailed(tt.args.comp)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("Value.LessThan() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("Value.LessThanDetailed() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if got != tt.want {
-				t.Errorf("Value.LessThan() = %v, want %v", got, tt.want)
+				t.Errorf("Value.LessThanDetailed() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -158,13 +174,17 @@ func TestValue_LessThanOrEqual(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := tt.v.LessThanOrEqual(tt.args.comp)
+			got := tt.v.LessThanOrEqual(tt.args.comp)
+			if got != tt.want {
+				t.Errorf("Value.LessThanOrEqual() = %v, want %v", got, tt.want)
+			}
+			got, err := tt.v.LessThanOrEqualDetailed(tt.args.comp)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("Value.LessThanOrEqual() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("Value.LessThanOrEqualDetailed() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if got != tt.want {
-				t.Errorf("Value.LessThanOrEqual() = %v, want %v", got, tt.want)
+				t.Errorf("Value.LessThanOrEqualDetailed() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -246,7 +266,7 @@ func TestValue_Add(t *testing.T) {
 				t.Errorf("Value.Add() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if equal, _ := got.Equal(tt.want); !equal {
+			if !got.Equal(tt.want) {
 				t.Errorf("Value.Add() = %v, want %v", got, tt.want)
 			}
 		})
@@ -276,7 +296,7 @@ func TestValue_Sub(t *testing.T) {
 				t.Errorf("Value.Sub() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if equal, _ := got.Equal(tt.want); !equal {
+			if !got.Equal(tt.want) {
 				t.Errorf("Value.Sub() = %v, want %v", got, tt.want)
 			}
 		})
@@ -307,7 +327,7 @@ func TestValue_Mul(t *testing.T) {
 				t.Errorf("Value.Mul() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if equal, _ := got.Equal(tt.want); !equal {
+			if !got.Equal(tt.want) {
 				t.Errorf("Value.Mul() = %v, want %v", got, tt.want)
 			}
 		})
@@ -328,7 +348,7 @@ func TestValue_Abs(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := tt.v.Abs()
-			if equal, _ := got.Equal(tt.want); !equal {
+			if !got.Equal(tt.want) {
 				t.Errorf("Value.Abs() = %v, want %v", got, tt.want)
 			}
 		})
@@ -349,7 +369,7 @@ func TestValue_Neg(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := tt.v.Neg()
-			if equal, _ := got.Equal(tt.want); !equal {
+			if !got.Equal(tt.want) {
 				t.Errorf("Value.Neg() = %v, want %v", got, tt.want)
 			}
 		})
@@ -482,7 +502,7 @@ func TestValue_SplitWithSmallestUnit(t *testing.T) {
 				return
 			}
 			for i, part := range got {
-				if equal, _ := part.Equal(tt.want[i]); !equal {
+				if !part.Equal(tt.want[i]) {
 					t.Errorf("Value.SplitWithSmallestUnit() = %v, want %v", got, tt.want)
 					break
 				}
@@ -545,7 +565,7 @@ func TestValue_SplitWithSmallestUnit_Random(t *testing.T) {
 			return
 		}
 		for i, part := range got {
-			if equal, _ := part.Equal(want[i]); !equal {
+			if !part.Equal(want[i]) {
 				t.Logf("sum = %v", sum)
 				t.Errorf("sum.SplitWithSmallestUnit() = %v, want %v", got, want)
 				return
@@ -613,7 +633,7 @@ func TestValue_SplitWithDecimals(t *testing.T) {
 				return
 			}
 			for i, part := range got {
-				if equal, _ := part.Equal(tt.want[i]); !equal {
+				if !part.Equal(tt.want[i]) {
 					t.Errorf("Value.SplitWithDecimals() = %v, want %v", got, tt.want)
 					break
 				}
@@ -669,7 +689,7 @@ func TestValue_SplitWithDecimals_Random(t *testing.T) {
 			return
 		}
 		for i, part := range got {
-			if equal, _ := part.Equal(want[i]); !equal {
+			if !part.Equal(want[i]) {
 				t.Logf("sum = %v", sum)
 				t.Errorf("sum.SplitWithDecimals() = %v, want %v", got, want)
 				return
@@ -706,7 +726,7 @@ func TestValue_Split(t *testing.T) {
 				return
 			}
 			for i, part := range got {
-				if equal, _ := part.Equal(tt.want[i]); !equal {
+				if !part.Equal(tt.want[i]) {
 					t.Errorf("Value.Split() = %v, want %v", got, tt.want)
 					break
 				}

@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2022 David Vogel
+// Copyright (c) 2021-2023 David Vogel
 //
 // This software is released under the MIT License.
 // https://opensource.org/licenses/MIT
@@ -13,8 +13,17 @@ import (
 )
 
 // Equal returns if a monetary value is equal to another.
+// If the currency differs between the two values, the result is always false.
+func (v Value) Equal(comp Value) bool {
+	if v.currency != comp.currency {
+		return false
+	}
+	return v.amount.Equal(comp.amount)
+}
+
+// EqualDetailed returns if a monetary value is equal to another.
 // If the currency differs between the two values, the result is always false and an error is returned.
-func (v Value) Equal(comp Value) (bool, error) {
+func (v Value) EqualDetailed(comp Value) (bool, error) {
 	if v.currency != comp.currency {
 		return false, &ErrorDifferentCurrencies{v.currency, comp.currency}
 	}
@@ -22,8 +31,17 @@ func (v Value) Equal(comp Value) (bool, error) {
 }
 
 // GreaterThan returns if the monetary value is greater than another value.
+// If the currency differs between the two values, the result is always false.
+func (v Value) GreaterThan(comp Value) bool {
+	if v.currency != comp.currency {
+		return false
+	}
+	return v.amount.GreaterThan(comp.amount)
+}
+
+// GreaterThanDetailed returns if the monetary value is greater than another value.
 // If the currency differs between the two values, the result is always false and an error is returned.
-func (v Value) GreaterThan(comp Value) (bool, error) {
+func (v Value) GreaterThanDetailed(comp Value) (bool, error) {
 	if v.currency != comp.currency {
 		return false, &ErrorDifferentCurrencies{v.currency, comp.currency}
 	}
@@ -31,8 +49,17 @@ func (v Value) GreaterThan(comp Value) (bool, error) {
 }
 
 // GreaterThanOrEqual returns if the monetary value is greater than or equal to another value.
+// If the currency differs between the two values, the result is always false.
+func (v Value) GreaterThanOrEqual(comp Value) bool {
+	if v.currency != comp.currency {
+		return false
+	}
+	return v.amount.GreaterThanOrEqual(comp.amount)
+}
+
+// GreaterThanOrEqualDetailed returns if the monetary value is greater than or equal to another value.
 // If the currency differs between the two values, the result is always false and an error is returned.
-func (v Value) GreaterThanOrEqual(comp Value) (bool, error) {
+func (v Value) GreaterThanOrEqualDetailed(comp Value) (bool, error) {
 	if v.currency != comp.currency {
 		return false, &ErrorDifferentCurrencies{v.currency, comp.currency}
 	}
@@ -40,8 +67,17 @@ func (v Value) GreaterThanOrEqual(comp Value) (bool, error) {
 }
 
 // LessThan returns if the monetary value is less than another value.
+// If the currency differs between the two values, the result is always false.
+func (v Value) LessThan(comp Value) bool {
+	if v.currency != comp.currency {
+		return false
+	}
+	return v.amount.LessThan(comp.amount)
+}
+
+// LessThanDetailed returns if the monetary value is less than another value.
 // If the currency differs between the two values, the result is always false and an error is returned.
-func (v Value) LessThan(comp Value) (bool, error) {
+func (v Value) LessThanDetailed(comp Value) (bool, error) {
 	if v.currency != comp.currency {
 		return false, &ErrorDifferentCurrencies{v.currency, comp.currency}
 	}
@@ -49,8 +85,17 @@ func (v Value) LessThan(comp Value) (bool, error) {
 }
 
 // LessThanOrEqual returns if the monetary value is less than or equal to another value.
+// If the currency differs between the two values, the result is always false.
+func (v Value) LessThanOrEqual(comp Value) bool {
+	if v.currency != comp.currency {
+		return false
+	}
+	return v.amount.LessThanOrEqual(comp.amount)
+}
+
+// LessThanOrEqualDetailed returns if the monetary value is less than or equal to another value.
 // If the currency differs between the two values, the result is always false and an error is returned.
-func (v Value) LessThanOrEqual(comp Value) (bool, error) {
+func (v Value) LessThanOrEqualDetailed(comp Value) (bool, error) {
 	if v.currency != comp.currency {
 		return false, &ErrorDifferentCurrencies{v.currency, comp.currency}
 	}
