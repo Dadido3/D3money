@@ -7,15 +7,16 @@ While it works and most of its functionality is tested by unit tests, the API ma
 
 ## Features
 
-- Uses [shopspring/decimal](https://github.com/shopspring/decimal) for arbitrary-precision fixed-point decimal numbers.
-- Values are immutable by default for safety.
+- Uses [shopspring/decimal](https://github.com/shopspring/decimal) for arbitrary precision fixed-point decimal numbers.
+- Values are immutable by default.
 - ISO 4217 currencies.
-- Extendable with custom currencies.
-- Tests to ensure uniqueness and correctness of (even custom) currencies.
-- Useful mathematical operations, including a way to split a monetary value into several parts.
-- Data-bindings for JSON, Binary, Text, Gob encodings.
+- Extensible with custom currencies.
+- Tests to ensure uniqueness and correctness of currencies (including user-defined ones).
+- Useful mathematical operations, including a way to split a monetary value into n parts.
+- Data bindings for JSON, binary, text, gob encodings.
 - Implements scanner and valuer interfaces for databases.
 - Implements `GormDBDataTypeInterface`.
+- Supports postgresql composite types.
 
 Planned:
 
@@ -25,10 +26,10 @@ Planned:
 - [ ] Migration field for currencies, e.g. to describe how custom currencies will map to official supported currencies.
 - [ ] Generate currency data from the official ISO 4217 sources via `go generate`.
 
-## What this not is
+## What this is not
 
 A high performance library to do number crunching with.
-While this library isn't slow, it's not meant for handling huge tables of monetary values.
+Although this library is not slow, it is not intended for processing large tables of monetary values.
 The focus of this library is on correctness and ease of use.
 
 ## Usage
