@@ -22,7 +22,7 @@ import (
 func (v Value) MarshalJSON() ([]byte, error) {
 	d := struct {
 		Amount   decimal.Decimal
-		Currency string `json:",omitempty"`
+		Currency string
 	}{
 		Amount: v.amount,
 	}
@@ -39,7 +39,7 @@ func (v Value) MarshalJSON() ([]byte, error) {
 func (v *Value) UnmarshalJSON(data []byte) error {
 	d := struct {
 		Amount   decimal.Decimal
-		Currency string `json:",omitempty"`
+		Currency string
 	}{}
 
 	if err := json.Unmarshal(data, &d); err != nil {
