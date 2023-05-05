@@ -6,9 +6,9 @@
 package money
 
 import (
-	"reflect"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/shopspring/decimal"
 	"golang.org/x/text/language"
 )
@@ -110,7 +110,7 @@ func TestFromString(t *testing.T) {
 				t.Errorf("FromString() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
+			if !cmp.Equal(got, tt.want) {
 				t.Errorf("FromString() = %v, want %v", got, tt.want)
 			}
 		})
@@ -145,7 +145,7 @@ func TestFromStringAndCurrency(t *testing.T) {
 				t.Errorf("FromStringAndCurrency() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
+			if !cmp.Equal(got, tt.want) {
 				t.Errorf("FromStringAndCurrency() = %v, want %v", got, tt.want)
 			}
 		})

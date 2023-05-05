@@ -2,10 +2,10 @@ package dbt
 
 import (
 	"math/rand"
-	"reflect"
 	"testing"
 
 	money "github.com/Dadido3/D3money"
+	"github.com/google/go-cmp/cmp"
 	"github.com/shopspring/decimal"
 )
 
@@ -127,8 +127,8 @@ func TestCompositeType(t *testing.T) {
 	}
 
 	a1ExpectedFields := CompositeFields{a1.Balance.Decimal(), a1.Balance.Currency().UniqueID()}
-	if !reflect.DeepEqual(a1ReadFields, a1ExpectedFields) {
-		t.Errorf("Queried balance fields %+v don't match expected fields %+v", a1ReadFields, a1ExpectedFields)
+	if !cmp.Equal(a1ReadFields, a1ExpectedFields) {
+		t.Errorf("Queried and expected composite fields differ: %v", cmp.Diff(a1ReadFields, a1ExpectedFields))
 	}
 
 	var a2ReadFields CompositeFields
@@ -137,8 +137,8 @@ func TestCompositeType(t *testing.T) {
 	}
 
 	a2ExpectedFields := CompositeFields{a2.Balance.Decimal(), 0}
-	if !reflect.DeepEqual(a2ReadFields, a2ExpectedFields) {
-		t.Errorf("Queried balance fields %+v don't match expected fields %+v", a2ReadFields, a2ExpectedFields)
+	if !cmp.Equal(a2ReadFields, a2ExpectedFields) {
+		t.Errorf("Queried and expected composite fields differ: %v", cmp.Diff(a2ReadFields, a2ExpectedFields))
 	}
 
 }

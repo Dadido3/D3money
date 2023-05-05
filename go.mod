@@ -3,6 +3,7 @@ module github.com/Dadido3/D3money
 go 1.18
 
 require (
+	github.com/google/go-cmp v0.5.9
 	github.com/jackc/pgx v3.6.2+incompatible
 	github.com/mattn/go-sqlite3 v1.14.16
 	github.com/shopspring/decimal v1.3.1
