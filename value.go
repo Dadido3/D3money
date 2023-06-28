@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2022 David Vogel
+// Copyright (c) 2021-2023 David Vogel
 //
 // This software is released under the MIT License.
 // https://opensource.org/licenses/MIT
@@ -24,6 +24,7 @@ type Value struct {
 // This will not use any locale specific formatting, and is not suited for input from humans without any preprocessing.
 //
 // Examples:
+//
 //	FromString("-10000.123")             // Returns a currency-less value.
 //	FromString("-10000.123 ISO4217-EUR") // Returns a value with the EUR currency defined by ISO 4217.
 //	FromString("-10000.123 EUR")         // Returns an error, as the currency in the string can't be matched/found.
@@ -59,6 +60,7 @@ func MustFromString(str string) Value {
 // This will not use any locale specific formatting, and is not suited for input from humans without any preprocessing.
 //
 // Examples:
+//
 //	FromStringAndCurrency("-10000.123", nil)                                         // Returns a currency-less value.
 //	FromStringAndCurrency("-10000.123 ISO4217-EUR", nil)                             // Returns an error, as the currency differs from the one defined in field cur.
 //	FromStringAndCurrency("-10000.123", ISO4217Currencies.ByCode("EUR"))             // Returns a value with EUR currency.
@@ -135,6 +137,19 @@ func (v Value) String() string {
 	if v.currency != nil {
 		// Output "Amount UniqueCode" pair.
 		return v.amount.String() + " " + v.currency.UniqueCode()
+	}
+
+	// If there is no currency output only "Amount".
+	return v.amount.String()
+}
+
+// StringWithCode returns the monetary value as a "Amount Code" pair, e.g. "12.3 EUR".
+//
+// This is locale independent, and is an interim solution until the locale dependent formatter works.
+func (v Value) StringWithCode() string {
+	if v.currency != nil {
+		// Output "Amount Code" pair.
+		return v.amount.String() + " " + v.currency.Code()
 	}
 
 	// If there is no currency output only "Amount".
