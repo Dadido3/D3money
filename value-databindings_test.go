@@ -190,8 +190,7 @@ func TestGobEncoding(t *testing.T) {
 	encodedValues := make([]bytes.Buffer, len(values))
 	for i, value := range values {
 		enc := gob.NewEncoder(&encodedValues[i])
-		var err error
-		if enc.Encode(value); err != nil {
+		if err := enc.Encode(value); err != nil {
 			t.Errorf("enc.Encode(%#v) failed: %v", value, err)
 		}
 	}

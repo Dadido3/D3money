@@ -172,15 +172,15 @@ func parse(str string, cc *CurrencyCollection, additionalCurrency Currency) (dec
 	str = strings.ReplaceAll(str, "\u00A0", " ")
 
 	// Parse expression.
-	splitted := strings.Split(str, " ")
-	switch len(splitted) {
+	split := strings.Split(str, " ")
+	switch len(split) {
 	case 1:
 		// String (probably) contains an amount string.
-		amountStr = splitted[0]
+		amountStr = split[0]
 
 	case 2:
 		// String (probably) contains an amount string + unique currency code.
-		amountStr, curStr = splitted[0], splitted[1]
+		amountStr, curStr = split[0], split[1]
 
 		// Check if additionalCurrency matches with the unique code.
 		if additionalCurrency != nil {
