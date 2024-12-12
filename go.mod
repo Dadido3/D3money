@@ -7,7 +7,7 @@ require (
 	github.com/jackc/pgx v3.6.2+incompatible
 	github.com/mattn/go-sqlite3 v1.14.16
 	github.com/shopspring/decimal v1.3.1
-	golang.org/x/text v0.9.0
+	golang.org/x/text v0.21.0
 	gorm.io/driver/postgres v1.5.0
 	gorm.io/driver/sqlite v1.5.0
 	gorm.io/gorm v1.25.0
@@ -24,5 +24,5 @@ require (
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/lib/pq v1.10.2 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	golang.org/x/crypto v0.8.0 // indirect
+	golang.org/x/crypto v0.31.0 // indirect
 )
