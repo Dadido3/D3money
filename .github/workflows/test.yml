@@ -7,6 +7,9 @@ jobs:
   build:
     name: build and test
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go-version: ['1.18.x', '1.19.x', '1.20.x', '1.21.x', '1.22.x', '1.23.x']
     services:
       postgres:
         image: postgres:latest
@@ -23,22 +26,24 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+
     steps:
+      - name: Set up Go ${{ matrix.go-version }}
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go-version }}
 
-    - name: Set up Go 1.x
-      uses: actions/setup-go@v2
-      with:
-        go-version: ^1.17
-      id: go
+      - name: Display Go version
+        run: go version
 
-    - name: Check out code into the Go module directory
-      uses: actions/checkout@v2
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v4
 
-    - name: Test package
-      run: go test -v .
+      - name: Test package
+        run: go test -v .
 
-    - name: Test SQLite
-      run: go test -v ./db-test/
+      - name: Test SQLite
+        run: go test -v ./db-test/
 
-    - name: Test PostgreSQL via pgx
-      run: go test -v ./db-test/ --db-driver pgx --db-dsn "host=localhost port=5432 user=test password=test dbname=test sslmode=disable"
+      - name: Test PostgreSQL via pgx
+        run: go test -v ./db-test/ --db-driver pgx --db-dsn "host=localhost port=5432 user=test password=test dbname=test sslmode=disable"
