@@ -1,10 +1,10 @@
 module github.com/Dadido3/D3money
 
-go 1.21
+go 1.18
 
 require (
 	github.com/google/go-cmp v0.6.0
-	github.com/jackc/pgx/v5 v5.7.1
+	github.com/jackc/pgx/v5 v5.5.5
 	github.com/mattn/go-sqlite3 v1.14.24
 	github.com/shopspring/decimal v1.4.0
 	golang.org/x/text v0.21.0
